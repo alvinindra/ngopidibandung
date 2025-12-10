@@ -1,0 +1,185 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 1,
+        "name": "Kopi Selasar Sunaryo",
+        "address": "Jl. Bukit Pakar Timur No.100, Ciburial, Bandung",
+        "rating": 4.7,
+        "wifiSpeed": "50 Mbps",
+        "image": "/placeholder.svg?height=120&width=280"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [107.6395, -6.8631]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 2,
+        "name": "Two Hands Full",
+        "address": "Jl. Progo No.15, Citarum, Bandung",
+        "rating": 4.6,
+        "wifiSpeed": "35 Mbps",
+        "image": "/placeholder.svg?height=120&width=280"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [107.6089, -6.9024]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 3,
+        "name": "Armor Kopi",
+        "address": "Jl. Sumatera No.21, Braga, Bandung",
+        "rating": 4.5,
+        "wifiSpeed": "40 Mbps",
+        "image": "/placeholder.svg?height=120&width=280"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [107.6107, -6.9167]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 4,
+        "name": "Mimiti Coffee",
+        "address": "Jl. Rancakendal Luhur No.10, Bandung",
+        "rating": 4.8,
+        "wifiSpeed": "60 Mbps",
+        "image": "/placeholder.svg?height=120&width=280"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [107.6234, -6.8712]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 5,
+        "name": "Kopi Toko Djawa",
+        "address": "Jl. Braga No.81, Braga, Bandung",
+        "rating": 4.6,
+        "wifiSpeed": "30 Mbps",
+        "image": "/placeholder.svg?height=120&width=280"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [107.6092, -6.9189]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 6,
+        "name": "Noah's Barn",
+        "address": "Jl. Dayang Sumbi No.2, Lebak Siliwangi, Bandung",
+        "rating": 4.4,
+        "wifiSpeed": "45 Mbps",
+        "image": "/placeholder.svg?height=120&width=280"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [107.6145, -6.8892]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 7,
+        "name": "Warung Kopi Limarasa",
+        "address": "Jl. Burangrang No.5, Burangrang, Bandung",
+        "rating": 4.3,
+        "wifiSpeed": "25 Mbps",
+        "image": "/placeholder.svg?height=120&width=280"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [107.6178, -6.9234]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 8,
+        "name": "Hummingbird Eatery",
+        "address": "Jl. Progo No.14, Citarum, Bandung",
+        "rating": 4.5,
+        "wifiSpeed": "55 Mbps",
+        "image": "/placeholder.svg?height=120&width=280"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [107.6082, -6.9028]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 9,
+        "name": "Starbucks Reserve Dewata",
+        "address": "Jl. Asia Afrika No.65, Braga, Bandung",
+        "rating": 4.2,
+        "wifiSpeed": "50 Mbps",
+        "image": "/placeholder.svg?height=120&width=280"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [107.6098, -6.9212]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 10,
+        "name": "Yellow Truck Coffee",
+        "address": "Jl. Dipatiukur No.5, Lebak Gede, Bandung",
+        "rating": 4.4,
+        "wifiSpeed": "35 Mbps",
+        "image": "/placeholder.svg?height=120&width=280"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [107.6187, -6.8945]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 11,
+        "name": "Sejiwa Coffee",
+        "address": "Jl. Ciumbuleuit No.42, Cidadap, Bandung",
+        "rating": 4.7,
+        "wifiSpeed": "65 Mbps",
+        "image": "/placeholder.svg?height=120&width=280"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [107.6023, -6.8678]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 12,
+        "name": "Blue Doors Coffee",
+        "address": "Jl. Gandapura No.61, Merdeka, Bandung",
+        "rating": 4.5,
+        "wifiSpeed": "40 Mbps",
+        "image": "/placeholder.svg?height=120&width=280"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [107.6156, -6.8823]
+      }
+    }
+  ]
+}
