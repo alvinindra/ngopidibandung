@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import Script from "next/script"
 import "./globals.css"
+import { ThemeProvider } from "@/components/providers/theme-provider"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -46,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"
@@ -56,14 +57,16 @@ export default function RootLayout({
         />
       </head>
       <body className={`font-sans antialiased`}>
-        <Script
-          src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-          crossOrigin=""
-          strategy="beforeInteractive"
-        />
-        {children}
-        <Analytics />
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <Script
+            src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossOrigin=""
+            strategy="beforeInteractive"
+          />
+          {children}
+          <Analytics />
+        </ThemeProvider>
       </body>
     </html>
   )

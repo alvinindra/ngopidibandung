@@ -1,7 +1,21 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 import cafesData from "@/data/cafes.json"
+import { AlignCenter } from "lucide-react"
+
+export interface MapHandle {
+  locateUser: () => Promise<void>
+  toggleBaseLayer: () => void
+  resetView: () => void
+}
+
+type SupportedTheme = "light" | "dark"
+
+interface CafeMapProps {
+  language: "en" | "id"
+  theme: string | undefined
+}
 
 declare global {
   interface Window {
@@ -27,11 +41,148 @@ interface CafeFeature {
   }
 }
 
-export default function CafeMap() {
+const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap({ language, theme }, ref) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const [isLoaded, setIsLoaded] = useState(false)
   const initAttempts = useRef(0)
+  const [baseLayer, setBaseLayer] = useState<SupportedTheme>("light")
+  const tileLayersRef = useRef<Record<SupportedTheme, any> | null>(null)
+  const userMarkerRef = useRef<any>(null)
+  const userAccuracyRef = useRef<any>(null)
+
+  const getTileLayer = (type: SupportedTheme, L: any) => {
+    const urls: Record<SupportedTheme, string> = {
+      light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    }
+
+    return L.tileLayer(urls[type], {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: "abcd",
+      maxZoom: 19,
+    })
+  }
+
+  const applyBaseLayer = (nextLayer: SupportedTheme) => {
+    const map = mapInstanceRef.current
+    const layers = tileLayersRef.current
+    if (!map || !layers) return
+
+    Object.values(layers).forEach((layer) => {
+      if (map.hasLayer(layer)) {
+        map.removeLayer(layer)
+      }
+    })
+
+    const selectedLayer = layers[nextLayer]
+    if (selectedLayer) {
+      selectedLayer.addTo(map)
+      setBaseLayer(nextLayer)
+    }
+  }
+
+  const locateUser = async () => {
+    const map = mapInstanceRef.current
+    if (!map) {
+      throw new Error(language === "id" ? "Peta belum siap" : "Map is not ready yet")
+    }
+    if (typeof window !== "undefined" && window.isSecureContext === false) {
+      throw new Error(
+        language === "id"
+          ? "Lokasi hanya bisa diakses di HTTPS atau localhost"
+          : "Location is only available on HTTPS or localhost",
+      )
+    }
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      throw new Error(language === "id" ? "Geolokasi tidak tersedia" : "Geolocation is not available")
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords
+          const accuracy = Math.min(Math.max(position.coords.accuracy || 80, 30), 500)
+          const L = window.L
+
+          if (userMarkerRef.current) {
+            map.removeLayer(userMarkerRef.current)
+          }
+          if (userAccuracyRef.current) {
+            map.removeLayer(userAccuracyRef.current)
+          }
+
+          const userIcon = L.divIcon({
+            className: "user-location-icon user-location-marker-container",
+            html: `
+              <div class="user-location-marker">
+                <span class="user-location-dot"></span>
+                <span class="user-location-pulse"></span>
+              </div>
+            `,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+            popupAnchor: [0, -14],
+          })
+
+          userMarkerRef.current = L.marker([latitude, longitude], {
+            title: "You are here",
+            icon: userIcon,
+          }).addTo(map)
+
+          userAccuracyRef.current = L.circle([latitude, longitude], {
+            radius: accuracy,
+            color: "#3b82f6",
+            weight: 1,
+            fillColor: "#3b82f6",
+            fillOpacity: 0.15,
+          }).addTo(map)
+
+          userMarkerRef.current.bindPopup(
+            `<div style="font-weight:600;margin-bottom:4px;">${language === "id" ? "Lokasi Anda" : "Your location"
+            }</div><div style="color:#666;font-size:13px;">Lat: ${latitude.toFixed(5)}, Lng: ${longitude.toFixed(
+              5,
+            )}</div>`,
+          )
+
+          userMarkerRef.current.openPopup()
+          const targetZoom = Math.max(map.getZoom() ?? 13, 16)
+          map.flyTo([latitude, longitude], targetZoom, { animate: true, duration: 0.6 })
+          resolve()
+        },
+        (error) => {
+          console.warn("[v0] Unable to get location", error)
+          const message =
+            language === "id"
+              ? "Tidak dapat mengambil lokasi. Pastikan izin diberikan."
+              : "Unable to fetch location. Please allow permission."
+          reject(new Error(message))
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+      )
+    })
+  }
+
+  const toggleBaseLayer = () => {
+    applyBaseLayer(baseLayer === "light" ? "dark" : "light")
+  }
+
+  const resetView = () => {
+    const map = mapInstanceRef.current
+    if (!map) return
+    map.flyTo([-6.9025, 107.6191], 13)
+  }
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      locateUser,
+      toggleBaseLayer,
+      resetView,
+    }),
+    [baseLayer, language],
+  )
 
   useEffect(() => {
     const initMap = () => {
@@ -61,16 +212,16 @@ export default function CafeMap() {
 
         mapInstanceRef.current = map
 
+        // Create tile layers for light and dark mode
+        tileLayersRef.current = {
+          light: getTileLayer("light", L),
+          dark: getTileLayer("dark", L),
+        }
+
+        tileLayersRef.current.light.addTo(map)
+
         // Add zoom control to bottom right
         L.control.zoom({ position: "bottomright" }).addTo(map)
-
-        // Add OpenStreetMap tiles with clean style
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-          subdomains: "abcd",
-          maxZoom: 19,
-        }).addTo(map)
 
         // Create custom coffee icon
         const createCoffeeIcon = () => {
@@ -161,6 +312,11 @@ export default function CafeMap() {
     }
   }, [])
 
+  useEffect(() => {
+    const mappedTheme: SupportedTheme = theme === "dark" ? "dark" : "light"
+    applyBaseLayer(mappedTheme)
+  }, [theme])
+
   return (
     <>
       <div ref={mapRef} className="absolute inset-0 z-0" />
@@ -174,4 +330,6 @@ export default function CafeMap() {
       )}
     </>
   )
-}
+})
+
+export default CafeMap

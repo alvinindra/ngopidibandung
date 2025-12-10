@@ -15,9 +15,17 @@ import {
 
 interface FloatingSearchBarProps {
   onSearch: (query: string) => void
+  labels: {
+    placeholder: string
+    filterTitle: string
+    fastWifi: string
+    highRating: string
+    search: string
+    clear: string
+  }
 }
 
-export default function FloatingSearchBar({ onSearch }: FloatingSearchBarProps) {
+export default function FloatingSearchBar({ onSearch, labels }: FloatingSearchBarProps) {
   const [query, setQuery] = useState("")
   const [filters, setFilters] = useState({
     fastWifi: false,
@@ -36,14 +44,14 @@ export default function FloatingSearchBar({ onSearch }: FloatingSearchBarProps) 
           <Coffee className="h-5 w-5 text-primary" />
           <Input
             type="text"
-            placeholder="Search cafes in Bandung..."
+            placeholder={labels.placeholder}
             value={query}
             onChange={(e) => handleSearch(e.target.value)}
             className="border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60 text-foreground"
           />
           {query && (
             <button onClick={() => handleSearch("")} className="p-1 hover:bg-muted rounded-full transition-colors">
-              <X className="h-4 w-4 text-muted-foreground" />
+              <X className="h-4 w-4 text-muted-foreground" aria-label={labels.clear} />
             </button>
           )}
         </div>
@@ -55,25 +63,28 @@ export default function FloatingSearchBar({ onSearch }: FloatingSearchBarProps) 
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Filter Cafes</DropdownMenuLabel>
+              <DropdownMenuLabel>{labels.filterTitle}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem
                 checked={filters.fastWifi}
                 onCheckedChange={(checked) => setFilters((prev) => ({ ...prev, fastWifi: checked }))}
               >
-                Fast WiFi (40+ Mbps)
+                {labels.fastWifi}
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={filters.highRating}
                 onCheckedChange={(checked) => setFilters((prev) => ({ ...prev, highRating: checked }))}
               >
-                High Rating (4.5+)
+                {labels.highRating}
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground px-4">
+          <Button
+            className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground px-4"
+            onClick={() => onSearch(query)}
+          >
             <Search className="h-4 w-4" />
-            Search
+            {labels.search}
           </Button>
         </div>
       </div>
