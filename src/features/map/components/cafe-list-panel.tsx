@@ -1,81 +1,125 @@
 "use client"
 
+import type React from "react"
 import { useState } from "react"
-import { ChevronUp, ChevronDown, Star, Wifi, MapPin, Coffee } from "lucide-react"
+import { MapPin, Coffee, Search, Undo2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import cafesData from "@/data/cafes.json"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import { Button } from "@/components/ui/button"
 import { CafeFeature } from "../types"
 
 interface CafeListPanelProps {
-  searchQuery: string
+  language: "en" | "id"
+  cafes: CafeFeature[]
+  isOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+  onSelectCafe?: (feature: CafeFeature) => void
+  onResetFilters?: () => void
 }
 
-export default function CafeListPanel({ searchQuery }: CafeListPanelProps) {
+export default function CafeListPanel({
+  language,
+  cafes,
+  isOpen,
+  onOpenChange,
+  onSelectCafe,
+  onResetFilters,
+}: CafeListPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const open = isOpen ?? isExpanded
+  const handleOpenChange = onOpenChange ?? setIsExpanded
+  const hasResults = cafes.length > 0
 
-  const cafes = cafesData.features as CafeFeature[]
+  const stopMapScroll = (event: React.UIEvent | React.TouchEvent | React.PointerEvent) => {
+    event.stopPropagation()
+  }
 
-  const filteredCafes = cafes.filter(
-    (feature) =>
-      feature.properties.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      feature.properties.address.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  const headerLabel =
+    language === "id"
+      ? `${cafes.length} Tempat Ngopi`
+      : `${cafes.length} Cafe Results`
 
   return (
-    <div
-      className={`absolute bottom-0 left-0 right-0 z-40 bg-card rounded-t-3xl shadow-2xl border-t border-border/50 transition-all duration-300 ${isExpanded ? "h-[60vh]" : "h-auto"
-        }`}
-    >
-      {/* Handle */}
-      <button onClick={() => setIsExpanded(!isExpanded)} className="w-full flex flex-col items-center pt-3 pb-2">
-        <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mb-2" />
-        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <Coffee className="h-4 w-4" />
-          <span className="font-medium">{filteredCafes.length} Cafes in Bandung</span>
-          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-        </div>
-      </button>
+    <Drawer open={open} onOpenChange={handleOpenChange}>
+      <DrawerTrigger asChild>
+        <button
+          aria-label={open ? "Hide cafe results" : "Show cafe results"}
+          className="text-nowrap pointer-events-auto fixed bottom-6 left-1/2 z-40 inline-flex -translate-x-1/2 transform cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-primary p-4 text-white shadow-2xl transition hover:shadow-[0_20px_45px_-20px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+        >
+          <Search className="mr-2 h-4 w-4" /> {headerLabel}
+        </button>
+      </DrawerTrigger>
 
-      {/* Cafe List */}
-      {isExpanded && (
-        <ScrollArea className="h-[calc(60vh-60px)] px-4 pb-4">
-          <div className="grid gap-3">
-            {filteredCafes.map((feature: CafeFeature) => {
-              const cafe = feature.properties
-              return (
-                <div
-                  key={cafe.id}
-                  className="flex gap-4 p-3 bg-secondary/50 rounded-xl hover:bg-secondary transition-colors cursor-pointer"
-                >
-                  <img
-                    src={cafe.image || "/placeholder.svg"}
-                    alt={cafe.name}
-                    className="w-20 h-20 rounded-lg object-cover"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-card-foreground truncate">{cafe.name}</h3>
-                    <div className="flex items-center gap-1 mt-1 text-muted-foreground text-sm">
-                      <MapPin className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{cafe.address}</span>
+      <DrawerContent className="pointer-events-auto mx-auto w-full max-w-3xl rounded-t-3xl border border-slate-200 bg-white/95 shadow-2xl backdrop-blur-sm">
+        <DrawerHeader className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+          <DrawerTitle asChild>
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+              <Coffee className="h-4 w-4 text-primary" />
+              <span>{headerLabel}</span>
+            </div>
+          </DrawerTitle>
+          {onResetFilters ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 rounded-full text-slate-600 hover:text-white"
+              onClick={onResetFilters}
+            >
+              <Undo2 className="h-4 w-4" />
+              {language === "id" ? "Atur ulang filter" : "Reset filters"}
+            </Button>
+          ) : null}
+        </DrawerHeader>
+
+        <div onWheel={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()} className="px-4 pb-6 pt-3">
+          <div
+            className="max-h-[70vh] px-1 pb-15 overflow-y-auto"
+            style={{ overscrollBehavior: "contain" }}
+            onWheelCapture={stopMapScroll}
+            onTouchStart={stopMapScroll}
+            onTouchMove={stopMapScroll}
+            onPointerDown={stopMapScroll}
+          >
+            {hasResults ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {cafes.map((feature: CafeFeature) => {
+                  const cafe = feature.properties
+                  return (
+                    <div
+                      key={cafe.id}
+                      className="group flex h-full cursor-pointer flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                      onClick={() => onSelectCafe?.(feature)}
+                    >
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <h3 className="truncate font-semibold text-slate-900" title={cafe.name}>
+                          {cafe.name}
+                        </h3>
+                        <div className="flex items-start gap-1.5 text-sm text-slate-500">
+                          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                          <span className="block truncate" title={cafe.address}>
+                            {cafe.address}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 mt-2">
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        {cafe.rating}
-                      </Badge>
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <Wifi className="h-3 w-3" />
-                        {cafe.wifiSpeed}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white/70 text-sm text-slate-500">
+                <Search className="h-5 w-5" />
+                <p>{language === "id" ? "Tidak ada hasil yang cocok" : "No cafes match your filters"}</p>
+              </div>
+            )}
           </div>
-        </ScrollArea>
-      )}
-    </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
   )
 }

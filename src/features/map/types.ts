@@ -3,11 +3,24 @@ export interface CafeProperties {
   name: string
   address: string
   rating?: number
+  operationalHours?: string
+  priceRange?: string
+  menuLink?: string
+  cashAccepted?: boolean
+  cashlessAccepted?: boolean
+  serviceTax?: string
+  connection?: string
   wifiSpeed?: string
-  image?: string
-  thumbnail?: string
   downloadSpeed?: string
   uploadSpeed?: string
+  musala?: string
+  parkingMotor?: string
+  parkingCar?: string
+  parkingPaid?: string
+  notes?: string
+  keyTakeaway?: string
+  mapUrl?: string
+  instagram?: string
   distance?: string
   coordinatesText?: string
   referencePrice?: string
@@ -22,6 +35,6 @@ export interface CafeFeature {
   properties: CafeProperties
   geometry: {
     type: string
-    coordinates: [number, number]
+    coordinates: [number, number] | []
   }
 }

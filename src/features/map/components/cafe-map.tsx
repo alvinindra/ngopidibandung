@@ -12,10 +12,23 @@ export interface MapHandle {
 
 type SupportedTheme = "light" | "dark"
 
+const hasCoordinates = (
+  feature: CafeFeature,
+): feature is CafeFeature & { geometry: { coordinates: [number, number] } } => {
+  const coords = feature.geometry.coordinates
+  return (
+    Array.isArray(coords) &&
+    coords.length === 2 &&
+    coords.every((value) => typeof value === "number" && Number.isFinite(value))
+  )
+}
+
 interface CafeMapProps {
   language: "en" | "id"
   theme: string | undefined
   onSelectCafe?: (feature: CafeFeature) => void
+  onLoad?: () => void
+  cafes?: CafeFeature[]
 }
 
 declare global {
@@ -25,7 +38,7 @@ declare global {
 }
 
 const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
-  { language, theme, onSelectCafe },
+  { language, theme, onSelectCafe, onLoad, cafes },
   ref,
 ) {
   const mapRef = useRef<HTMLDivElement>(null)
@@ -39,10 +52,23 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
   const userMarkerRef = useRef<any>(null)
   const userAccuracyRef = useRef<any>(null)
   const onSelectCafeRef = useRef<typeof onSelectCafe>(onSelectCafe)
+  const cafesRef = useRef<CafeFeature[]>(cafes ?? ((cafesData.features as CafeFeature[]) ?? []))
 
   useEffect(() => {
     onSelectCafeRef.current = onSelectCafe
   }, [onSelectCafe])
+
+  useEffect(() => {
+    if (!isLoaded) return
+    onLoad?.()
+  }, [isLoaded, onLoad])
+
+  useEffect(() => {
+    cafesRef.current = cafes ?? ((cafesData.features as CafeFeature[]) ?? [])
+    if (cafeMarkerLayerRef.current && cafeClusterLayerRef.current && mapInstanceRef.current) {
+      renderCafeLayers()
+    }
+  }, [cafes])
 
   const getTileLayer = (type: SupportedTheme, L: any) => {
     const urls: Record<SupportedTheme, string> = {
@@ -145,11 +171,10 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
           resolve()
         },
         (error) => {
-          console.warn("[v0] Unable to get location", error)
           const message =
             language === "id"
-              ? "Tidak dapat mengambil lokasi. Pastikan izin diberikan."
-              : "Unable to fetch location. Please allow permission."
+              ? "Tidak dapat mengambil lokasi. Pastikan izin lokasi diberikan."
+              : "Unable to fetch location. Please allow location permission."
           reject(new Error(message))
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
@@ -213,7 +238,7 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
     markerLayer.clearLayers()
     clusterLayer.clearLayers()
 
-    const cafeFeatures = cafesData.features as CafeFeature[]
+    const cafeFeatures = cafesRef.current.filter(hasCoordinates)
 
     const handleCafeClick = (feature: CafeFeature) => {
       if (onSelectCafeRef.current) {
@@ -295,7 +320,6 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
   useEffect(() => {
     const initMap = () => {
       if (initAttempts.current > 50) {
-        console.log("[v0] Max init attempts reached, forcing load state")
         setIsLoaded(true)
         return
       }
@@ -305,18 +329,15 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
       const L = window.L
       if (!L) {
         initAttempts.current++
-        console.log("[v0] Leaflet not ready, attempt:", initAttempts.current)
         setTimeout(initMap, 100)
         return
       }
 
       try {
-        console.log("[v0] Initializing map...")
-
         // Initialize map centered on Bandung
         const map = L.map(mapRef.current, {
           zoomControl: false,
-        }).setView([-6.9025, 107.6191], 13)
+        }).setView([-6.9025, 107.6191], 15)
 
         mapInstanceRef.current = map
 
@@ -336,10 +357,8 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
         renderCafeLayers()
         map.on("zoomend", renderCafeLayers)
 
-        console.log("[v0] Map initialized successfully")
         setIsLoaded(true)
       } catch (error) {
-        console.log("[v0] Error initializing map:", error)
         setIsLoaded(true)
       }
     }
@@ -363,14 +382,6 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
   return (
     <>
       <div ref={mapRef} className="absolute inset-0 z-0" />
-      {!isLoaded && (
-        <div className="absolute inset-0 z-10 bg-white flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-600 text-sm">Loading map...</p>
-          </div>
-        </div>
-      )}
     </>
   )
 })

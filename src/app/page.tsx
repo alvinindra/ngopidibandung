@@ -1,16 +1,26 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import dynamic from "next/dynamic"
 import { useTheme } from "next-themes"
-import { Globe2, Moon, SunMedium } from "lucide-react"
 import FloatingSearchBar from "@/features/search/components/floating-search-bar"
 import MapControls from "@/features/map/components/map-controls"
 import CafeDetailDrawer from "@/features/map/components/cafe-detail-drawer"
-import { Button } from "@/components/ui/button"
+import CafeListPanel from "@/features/map/components/cafe-list-panel"
+import { FilterDrawer } from "@/features/search/components/filter-drawer"
+import cafesData from "@/data/cafes.json"
 import type { MapHandle } from "@/features/map/components/cafe-map"
 import { CafeFeature } from "@/features/map/types"
-import { cn } from "@/lib/utils"
+import {
+  FilterState,
+  countActiveFilters,
+  defaultFilters,
+  matchesFilters,
+} from "@/features/search/filter-utils"
+import { Button } from "@/components/ui/button"
+import { X } from "lucide-react"
+
+const INTRO_STORAGE_KEY = "ngopidibandung_intro_seen"
 
 // Dynamically import the map component to avoid SSR issues
 const CafeMap = dynamic(() => import("@/features/map/components/cafe-map"), {
@@ -28,8 +38,12 @@ const CafeMap = dynamic(() => import("@/features/map/components/cafe-map"), {
 export default function Home() {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [searchQuery, setSearchQuery] = useState("")
-  const [language, setLanguage] = useState<"en" | "id">("en")
+  const [language, setLanguage] = useState<"en" | "id">("id")
   const [selectedCafe, setSelectedCafe] = useState<CafeFeature | null>(null)
+  const [isListOpen, setIsListOpen] = useState(false)
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [filters, setFilters] = useState<FilterState>(defaultFilters)
+  const [isIntroOpen, setIsIntroOpen] = useState(false)
   const mapRef = useRef<MapHandle>(null)
 
   const t = {
@@ -49,7 +63,7 @@ export default function Home() {
     id: {
       searchPlaceholder: "Cari tempat ngopi di Bandung",
       filterTitle: "Filter Kafe",
-      fastWifi: "WiFi Cepat (40+ Mbps)",
+      fastWifi: "WiFi normal (40+ Mbps)",
       highRating: "Rating Tinggi (4.5+)",
       search: "Cari",
       clear: "Hapus pencarian",
@@ -69,26 +83,46 @@ export default function Home() {
   const handleLanguageToggle = () => setLanguage((prev) => (prev === "en" ? "id" : "en"))
   const handleSelectCafe = (cafe: CafeFeature) => setSelectedCafe(cafe)
   const handleCloseDrawer = () => setSelectedCafe(null)
+  const handleFiltersChange = (next: Partial<FilterState>) =>
+    setFilters((prev) => ({ ...prev, ...next }))
+  const handleResetFilters = () => setFilters(defaultFilters)
+
+  const handleAppReady = () => {
+    if (typeof window === "undefined") return
+    const hasSeen = localStorage.getItem(INTRO_STORAGE_KEY)
+    if (hasSeen) return
+
+    setIsIntroOpen(true)
+    localStorage.setItem(INTRO_STORAGE_KEY, "1")
+  }
+
+  const handleCloseIntro = () => setIsIntroOpen(false)
+
+  const allCafes = cafesData.features as CafeFeature[]
+
+  const filteredCafes = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    return allCafes.filter((feature) => matchesFilters(feature, filters, query))
+  }, [allCafes, filters, searchQuery])
+
+  const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters])
 
   return (
     <main className="relative h-screen w-full overflow-hidden bg-background">
-      <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
-        <Button variant="outline" size="icon" onClick={handleLanguageToggle} aria-label={t.languageToggle}>
-          <Globe2 className={cn("h-4 w-4", currentTheme === "dark" && "text-white")} />
-          <span className="sr-only">{t.languageToggle}</span>
-        </Button>
-        <Button variant="outline" size="icon" onClick={handleThemeToggle} aria-label={t.themeToggle}>
-          {currentTheme === "dark" ? <SunMedium className={cn("h-4 w-4", currentTheme === "dark" && "text-white")} /> : <Moon className={cn("h-4 w-4", currentTheme === "dark" && "text-white")} />}
-          <span className="sr-only">{t.themeToggle}</span>
-        </Button>
-      </div>
-
       {/* Map Layer */}
-      <CafeMap ref={mapRef} language={language} theme={currentTheme} onSelectCafe={handleSelectCafe} />
+      <CafeMap
+        ref={mapRef}
+        language={language}
+        theme={currentTheme}
+        cafes={filteredCafes}
+        onLoad={handleAppReady}
+        onSelectCafe={handleSelectCafe}
+      />
 
       {/* Floating Search Bar */}
       <FloatingSearchBar
         onSearch={setSearchQuery}
+        onOpenResults={() => setIsListOpen(true)}
         labels={{
           placeholder: t.searchPlaceholder,
           filterTitle: t.filterTitle,
@@ -103,14 +137,101 @@ export default function Home() {
       <MapControls
         onLocate={handleLocate}
         onReset={handleReset}
+        onToggleTheme={handleThemeToggle}
+        onToggleLanguage={handleLanguageToggle}
+        onOpenFilters={() => setIsFilterOpen(true)}
+        currentTheme={currentTheme === "dark" ? "dark" : "light"}
+        activeFilterCount={activeFilterCount}
         labels={{
           myLocation: t.myLocation,
           reset: t.reset,
+          languageToggle: t.languageToggle,
+          themeToggle: t.themeToggle,
           locateFailed: t.locateFailed,
+          filterTitle: t.filterTitle,
         }}
       />
 
+      <CafeListPanel
+        language={language}
+        cafes={filteredCafes}
+        isOpen={isListOpen}
+        onOpenChange={setIsListOpen}
+        onSelectCafe={handleSelectCafe}
+        onResetFilters={handleResetFilters}
+      />
+
+      <FilterDrawer
+        open={isFilterOpen}
+        onOpenChange={setIsFilterOpen}
+        filters={filters}
+        onChange={handleFiltersChange}
+        onReset={handleResetFilters}
+        language={language}
+      />
+
       <CafeDetailDrawer cafe={selectedCafe} onClose={handleCloseDrawer} language={language} />
+
+      {isIntroOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-lg rounded-2xl border bg-background p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">Selamat datang di Tongkrongan</p>
+                <h2 className="mt-1 text-xl font-semibold">Tempat Ngopi di Bandung</h2>
+              </div>
+              <button
+                type="button"
+                onClick={handleCloseIntro}
+                className="rounded-md p-2 text-muted-foreground transition hover:bg-muted"
+                aria-label="Tutup pengantar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+              <p>
+                Aplikasi ini membantu kamu mencari tempat ngopi di Bandung. Proyek ini open source, jadi
+                kamu bisa ikut kontribusi atau memberi masukan.
+              </p>
+              <p>
+                Dukung pengembangan lewat GitHub atau berdonasi. Dukunganmu bikin data makin lengkap dan
+                pengalaman makin nyaman.
+              </p>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <a
+                href="https://github.com/alvinindra/ngopidibandung"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-primary bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
+              >
+                Lihat & dukung di GitHub
+              </a>
+              <a
+                href="https://saweria.co/alvinindra"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition hover:border-primary hover:text-primary"
+              >
+                Donasi via Saweria
+              </a>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleCloseIntro}
+              >
+                Mulai jelajah
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   )
 }

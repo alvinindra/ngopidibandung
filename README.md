@@ -1,13 +1,10 @@
-# Ngopi Bandung (Bandung Cafe Map)
-
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/alvinindras-projects/v0-bandung-cafe-map)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/mJbDoOIGX9m)
+# Ngopi di Bandung (Bandung Cafe Map)
 
 Peta interaktif cafe di Bandung. Ngopi Bandung / Cafe Bandung membantu cari tempat ngopi, coworking, atau nongkrong dengan cepat. We mix Bahasa + English to keep it friendly for local and global contributors.
 
-## What is Ngopi Bandung?
+## What is Ngopi di Bandung?
 
-- Ngopi Bandung = curated map of Bandung coffee shops, cafes, and cowork spaces.
+- Ngopi di Bandung = curated map of Bandung coffee shops, cafes, and cowork spaces.
 - Fokus pada lokasi, fasilitas, harga rata-rata, dan vibes supaya gampang pilih tempat.
 - Data utama berada di `src/data/cafes.json` dan bisa dikembangkan bareng-bareng.
 
@@ -31,17 +28,14 @@ pnpm dev
 
 ## Contributing (Open Source / Kolaborasi)
 
-We welcome PRs and issues. Kita butuh bantuan untuk nambah data cafe dan perbaikan UI/UX.
+We welcome PRs and issues. Kita butuh bantuan untuk menambah data cafe dan perbaikan UI/UX.
 
 ### Tambah / update data cafe
 
 1. Edit `src/data/cafes.json`.
-2. Pastikan setiap entri memiliki:
-   - `id`, `name`, `address`, `rating`, `wifiSpeed`, `geometry.coordinates` ([lng, lat])
-   - optional drawer fields: `downloadSpeed`, `uploadSpeed`, `distance`, `referencePrice`, `lattePrice`, `icedCoffeePrice`, `afternoonTeaSet`, `comment`, `coordinatesText`
-   - gambar: `thumbnail` (drawer) + `image` (map fallback). Simpan file di `public/images` lalu referensikan dengan path `/images/namafile.jpg`.
+2. Pastikan setiap entri memiliki semua field yang diperlukan.
 3. Jaga format JSON rapi dan valid (double quotes, trailing comma free).
-4. Test lokal: `bun dev` lalu cek peta apakah marker + drawer muncul sesuai.
+4. Test lokal: `pnpm dev` lalu cek peta apakah marker + drawer muncul sesuai.
 
 ### Buka issue
 
@@ -56,16 +50,16 @@ We welcome PRs and issues. Kita butuh bantuan untuk nambah data cafe dan perbaik
 - Jelaskan perubahan dalam Bahasa/English singkat.
 - Sertakan screenshot/gif jika ubah UI.
 - Checklist sebelum kirim:
-  - Lint/format: `bun run lint` (atau tooling lain jika tersedia).
+  - Lint/format: `pnpm run lint` (atau tooling lain jika tersedia).
   - Pastikan JSON valid dan tidak memecah build.
   - Tambah test ringan bila menambah logic (jika applicable).
 - PR kecil lebih cepat direview.
 
-## Roadmap singkat
+## Dukung proyek ini
 
-- Tambah filter (wifi, colokan, price).
-- Mode offline / caching ringan.
-- Kontribusi bulk data cafe (CSV → JSON pipeline).
+- GitHub Sponsors: https://github.com/sponsors/alvinindra
+- Saweria: https://saweria.co/alvinindra
+- Kontribusi kode/data selalu terbuka lewat PR & issue.
 
 ## License
 

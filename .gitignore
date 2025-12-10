@@ -35,3 +35,6 @@ pnpm-debug.log*
 .npm
 .yarn/cache
 .pnpm-store
+
+# Gather Data
+scripts
