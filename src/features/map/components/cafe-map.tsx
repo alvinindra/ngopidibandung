@@ -2,7 +2,7 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 import cafesData from "@/data/cafes.json"
-import { AlignCenter } from "lucide-react"
+import { CafeFeature } from "../types"
 
 export interface MapHandle {
   locateUser: () => Promise<void>
@@ -15,6 +15,7 @@ type SupportedTheme = "light" | "dark"
 interface CafeMapProps {
   language: "en" | "id"
   theme: string | undefined
+  onSelectCafe?: (feature: CafeFeature) => void
 }
 
 declare global {
@@ -23,33 +24,25 @@ declare global {
   }
 }
 
-interface CafeProperties {
-  id: number
-  name: string
-  address: string
-  rating: number
-  wifiSpeed: string
-  image: string
-}
-
-interface CafeFeature {
-  type: string
-  properties: CafeProperties
-  geometry: {
-    type: string
-    coordinates: [number, number]
-  }
-}
-
-const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap({ language, theme }, ref) {
+const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
+  { language, theme, onSelectCafe },
+  ref,
+) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const [isLoaded, setIsLoaded] = useState(false)
   const initAttempts = useRef(0)
   const [baseLayer, setBaseLayer] = useState<SupportedTheme>("light")
   const tileLayersRef = useRef<Record<SupportedTheme, any> | null>(null)
+  const cafeMarkerLayerRef = useRef<any>(null)
+  const cafeClusterLayerRef = useRef<any>(null)
   const userMarkerRef = useRef<any>(null)
   const userAccuracyRef = useRef<any>(null)
+  const onSelectCafeRef = useRef<typeof onSelectCafe>(onSelectCafe)
+
+  useEffect(() => {
+    onSelectCafeRef.current = onSelectCafe
+  }, [onSelectCafe])
 
   const getTileLayer = (type: SupportedTheme, L: any) => {
     const urls: Record<SupportedTheme, string> = {
@@ -174,6 +167,121 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap({ language,
     map.flyTo([-6.9025, 107.6191], 13)
   }
 
+  const createClusterIcon = (count: number, L: any) =>
+    L.divIcon({
+      className: "cafe-cluster-icon",
+      html: `
+        <div class="cluster-circle">
+          <span class="cluster-count">${count}</span>
+        </div>
+      `,
+      iconSize: [46, 46],
+      iconAnchor: [23, 23],
+      popupAnchor: [0, -18],
+    })
+
+  const createCoffeeIcon = (L: any) =>
+    L.divIcon({
+      className: "custom-div-icon",
+      html: `
+        <div class="custom-marker">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="white" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 8h1a4 4 0 1 1 0 8h-1"/>
+            <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/>
+            <line x1="6" x2="6" y1="2" y2="4"/>
+            <line x1="10" x2="10" y1="2" y2="4"/>
+            <line x1="14" x2="14" y1="2" y2="4"/>
+          </svg>
+        </div>
+      `,
+      iconSize: [44, 52],
+      iconAnchor: [22, 52],
+      popupAnchor: [0, -52],
+    })
+
+  const renderCafeLayers = () => {
+    const map = mapInstanceRef.current
+    const markerLayer = cafeMarkerLayerRef.current
+    const clusterLayer = cafeClusterLayerRef.current
+    const L = typeof window !== "undefined" ? window.L : null
+
+    if (!map || !markerLayer || !clusterLayer || !L) return
+
+    const zoom = map.getZoom() ?? 13
+    const shouldCluster = zoom < 15
+
+    markerLayer.clearLayers()
+    clusterLayer.clearLayers()
+
+    const cafeFeatures = cafesData.features as CafeFeature[]
+
+    const handleCafeClick = (feature: CafeFeature) => {
+      if (onSelectCafeRef.current) {
+        onSelectCafeRef.current(feature)
+      }
+    }
+
+    if (!shouldCluster) {
+      cafeFeatures.forEach((feature) => {
+        const { coordinates } = feature.geometry
+        const marker = L.marker([coordinates[1], coordinates[0]], {
+          icon: createCoffeeIcon(L),
+        })
+        marker.on("click", () => handleCafeClick(feature))
+        markerLayer.addLayer(marker)
+      })
+      return
+    }
+
+    const cellSize = zoom >= 14 ? 0.02 : zoom >= 12 ? 0.05 : 0.1
+    const clusters = new Map<
+      string,
+      { count: number; latSum: number; lngSum: number; samples: CafeFeature[] }
+    >()
+
+    cafeFeatures.forEach((feature) => {
+      const { coordinates } = feature.geometry
+      const lat = coordinates[1]
+      const lng = coordinates[0]
+      const key = `${Math.floor(lat / cellSize)}-${Math.floor(lng / cellSize)}`
+      const existing = clusters.get(key)
+      if (existing) {
+        existing.count += 1
+        existing.latSum += lat
+        existing.lngSum += lng
+        existing.samples.push(feature)
+      } else {
+        clusters.set(key, { count: 1, latSum: lat, lngSum: lng, samples: [feature] })
+      }
+    })
+
+    clusters.forEach((cluster) => {
+      if (cluster.count === 1) {
+        const feature = cluster.samples[0]
+        const { coordinates } = feature.geometry
+        const marker = L.marker([coordinates[1], coordinates[0]], {
+          icon: createCoffeeIcon(L),
+        })
+        marker.on("click", () => handleCafeClick(feature))
+        markerLayer.addLayer(marker)
+        return
+      }
+
+      const centerLat = cluster.latSum / cluster.count
+      const centerLng = cluster.lngSum / cluster.count
+      const clusterMarker = L.marker([centerLat, centerLng], {
+        icon: createClusterIcon(cluster.count, L),
+      })
+
+      clusterMarker.on("click", () => {
+        const targetZoom = Math.min((map.getZoom() ?? 13) + 2, 18)
+        map.flyTo([centerLat, centerLng], targetZoom, { animate: true, duration: 0.4 })
+      })
+
+      clusterLayer.addLayer(clusterMarker)
+    })
+  }
+
   useImperativeHandle(
     ref,
     () => ({
@@ -223,76 +331,10 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap({ language,
         // Add zoom control to bottom right
         L.control.zoom({ position: "bottomright" }).addTo(map)
 
-        // Create custom coffee icon
-        const createCoffeeIcon = () => {
-          return L.divIcon({
-            className: "custom-div-icon",
-            html: `
-              <div class="custom-marker">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="white" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 8h1a4 4 0 1 1 0 8h-1"/>
-                  <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/>
-                  <line x1="6" x2="6" y1="2" y2="4"/>
-                  <line x1="10" x2="10" y1="2" y2="4"/>
-                  <line x1="14" x2="14" y1="2" y2="4"/>
-                </svg>
-              </div>
-            `,
-            iconSize: [44, 52],
-            iconAnchor: [22, 52],
-            popupAnchor: [0, -52],
-          })
-        }
-
-          // Add markers for each cafe
-          ; (cafesData.features as CafeFeature[]).forEach((feature) => {
-            const { coordinates } = feature.geometry
-            const props = feature.properties
-
-            const marker = L.marker([coordinates[1], coordinates[0]], {
-              icon: createCoffeeIcon(),
-            }).addTo(map)
-
-            // Create popup content
-            const popupContent = `
-            <div class="cafe-popup-content">
-              <img src="${props.image}" alt="${props.name}" class="cafe-popup-image" />
-              <div class="cafe-popup-body">
-                <h3 class="cafe-popup-title">${props.name}</h3>
-                <div class="cafe-popup-address">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                    <circle cx="12" cy="10" r="3"/>
-                  </svg>
-                  <span>${props.address}</span>
-                </div>
-                <div class="cafe-popup-meta">
-                  <div class="cafe-popup-rating">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" strokeWidth="2">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                    </svg>
-                    <span>${props.rating}</span>
-                  </div>
-                  <div class="cafe-popup-wifi">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
-                      <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
-                      <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-                      <line x1="12" x2="12.01" y1="20" y2="20"/>
-                    </svg>
-                    <span>${props.wifiSpeed}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `
-
-            marker.bindPopup(popupContent, {
-              maxWidth: 300,
-              minWidth: 280,
-              className: "cafe-popup",
-            })
-          })
+        cafeMarkerLayerRef.current = L.layerGroup().addTo(map)
+        cafeClusterLayerRef.current = L.layerGroup().addTo(map)
+        renderCafeLayers()
+        map.on("zoomend", renderCafeLayers)
 
         console.log("[v0] Map initialized successfully")
         setIsLoaded(true)
@@ -306,6 +348,7 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap({ language,
 
     return () => {
       if (mapInstanceRef.current) {
+        mapInstanceRef.current.off("zoomend", renderCafeLayers)
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null
       }

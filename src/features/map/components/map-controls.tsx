@@ -1,23 +1,21 @@
 "use client"
 
 import { useState } from "react"
-import { Locate, Layers, Navigation } from "lucide-react"
+import { Locate, Navigation } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface MapControlsProps {
   onLocate: () => Promise<void> | void
-  onToggleLayer: () => void
   onReset: () => void
   labels: {
     myLocation: string
-    layers: string
     reset: string
     locateFailed: string
   }
 }
 
-export default function MapControls({ onLocate, onToggleLayer, onReset, labels }: MapControlsProps) {
+export default function MapControls({ onLocate, onReset, labels }: MapControlsProps) {
   const [isLocating, setIsLocating] = useState(false)
 
   const handleLocate = async () => {
@@ -49,22 +47,6 @@ export default function MapControls({ onLocate, onToggleLayer, onReset, labels }
           </TooltipTrigger>
           <TooltipContent side="left">
             <p>{labels.myLocation}</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="secondary"
-              size="icon"
-              className="rounded-xl bg-card shadow-lg border border-border/50 hover:bg-muted"
-              onClick={onToggleLayer}
-            >
-              <Layers className="h-5 w-5 text-foreground" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="left">
-            <p>{labels.layers}</p>
           </TooltipContent>
         </Tooltip>
 

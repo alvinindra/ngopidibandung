@@ -15,16 +15,16 @@ Peta interaktif cafe di Bandung. Ngopi Bandung / Cafe Bandung membantu cari temp
 
 - Next.js (App Router) + TailwindCSS.
 - Map features live in `src/features/map`.
-- Default dev server runs with **Bun**: `bun dev` (pnpm/ npm work too, but Bun is fastest).
+- Default dev server runs with **Pnpm**: `pnpm dev`.
 
 ### Run locally
 
 ```bash
 # install deps (recommended)
-bun install
+pnpm install
 
 # start dev
-bun dev
+pnpm dev
 
 # open http://localhost:3000 (Turbopack may auto-pick another port)
 ```
@@ -37,11 +37,11 @@ We welcome PRs and issues. Kita butuh bantuan untuk nambah data cafe dan perbaik
 
 1. Edit `src/data/cafes.json`.
 2. Pastikan setiap entri memiliki:
-   - `name`, `address`, `latitude`, `longitude`
-   - `price_range` (string), `wifi` (boolean), `power` (boolean)
-   - optional: `notes`, `instagram`, `website`
+   - `id`, `name`, `address`, `rating`, `wifiSpeed`, `geometry.coordinates` ([lng, lat])
+   - optional drawer fields: `downloadSpeed`, `uploadSpeed`, `distance`, `referencePrice`, `lattePrice`, `icedCoffeePrice`, `afternoonTeaSet`, `comment`, `coordinatesText`
+   - gambar: `thumbnail` (drawer) + `image` (map fallback). Simpan file di `public/images` lalu referensikan dengan path `/images/namafile.jpg`.
 3. Jaga format JSON rapi dan valid (double quotes, trailing comma free).
-4. Test lokal: `bun dev` lalu cek peta apakah marker muncul sesuai.
+4. Test lokal: `bun dev` lalu cek peta apakah marker + drawer muncul sesuai.
 
 ### Buka issue
 

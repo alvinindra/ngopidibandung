@@ -6,8 +6,10 @@ import { useTheme } from "next-themes"
 import { Globe2, Moon, SunMedium } from "lucide-react"
 import FloatingSearchBar from "@/features/search/components/floating-search-bar"
 import MapControls from "@/features/map/components/map-controls"
+import CafeDetailDrawer from "@/features/map/components/cafe-detail-drawer"
 import { Button } from "@/components/ui/button"
 import type { MapHandle } from "@/features/map/components/cafe-map"
+import { CafeFeature } from "@/features/map/types"
 import { cn } from "@/lib/utils"
 
 // Dynamically import the map component to avoid SSR issues
@@ -27,6 +29,7 @@ export default function Home() {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [searchQuery, setSearchQuery] = useState("")
   const [language, setLanguage] = useState<"en" | "id">("en")
+  const [selectedCafe, setSelectedCafe] = useState<CafeFeature | null>(null)
   const mapRef = useRef<MapHandle>(null)
 
   const t = {
@@ -38,21 +41,19 @@ export default function Home() {
       search: "Search",
       clear: "Clear search",
       myLocation: "My Location",
-      layers: "Toggle Map Layer",
       reset: "Back to Bandung",
       languageToggle: "Switch to Bahasa",
       themeToggle: "Toggle light / dark",
       locateFailed: "Unable to fetch location. Allow permission or use HTTPS/localhost.",
     },
     id: {
-      searchPlaceholder: "Cari kafe di Bandung...",
+      searchPlaceholder: "Cari tempat ngopi di Bandung",
       filterTitle: "Filter Kafe",
       fastWifi: "WiFi Cepat (40+ Mbps)",
       highRating: "Rating Tinggi (4.5+)",
       search: "Cari",
       clear: "Hapus pencarian",
       myLocation: "Lokasi Saya",
-      layers: "Ganti Peta",
       reset: "Kembali ke Bandung",
       languageToggle: "Ganti ke English",
       themeToggle: "Ubah mode terang/gelap",
@@ -63,10 +64,11 @@ export default function Home() {
   const currentTheme = resolvedTheme ?? theme ?? "light"
 
   const handleLocate = () => mapRef.current?.locateUser()
-  const handleLayerToggle = () => mapRef.current?.toggleBaseLayer()
   const handleReset = () => mapRef.current?.resetView()
   const handleThemeToggle = () => setTheme(currentTheme === "dark" ? "light" : "dark")
   const handleLanguageToggle = () => setLanguage((prev) => (prev === "en" ? "id" : "en"))
+  const handleSelectCafe = (cafe: CafeFeature) => setSelectedCafe(cafe)
+  const handleCloseDrawer = () => setSelectedCafe(null)
 
   return (
     <main className="relative h-screen w-full overflow-hidden bg-background">
@@ -82,7 +84,7 @@ export default function Home() {
       </div>
 
       {/* Map Layer */}
-      <CafeMap ref={mapRef} language={language} theme={currentTheme} />
+      <CafeMap ref={mapRef} language={language} theme={currentTheme} onSelectCafe={handleSelectCafe} />
 
       {/* Floating Search Bar */}
       <FloatingSearchBar
@@ -100,15 +102,15 @@ export default function Home() {
       {/* Map Controls */}
       <MapControls
         onLocate={handleLocate}
-        onToggleLayer={handleLayerToggle}
         onReset={handleReset}
         labels={{
           myLocation: t.myLocation,
-          layers: t.layers,
           reset: t.reset,
           locateFailed: t.locateFailed,
         }}
       />
+
+      <CafeDetailDrawer cafe={selectedCafe} onClose={handleCloseDrawer} language={language} />
     </main>
   )
 }

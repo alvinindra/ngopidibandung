@@ -182,6 +182,34 @@
   margin: 0 auto;
 }
 
+.cafe-cluster-icon {
+  background: transparent;
+  border: none;
+}
+
+.cluster-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--primary) 90%, transparent);
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.cluster-count {
+  line-height: 1;
+}
+
+.cluster-circle:hover {
+  transform: scale(1.06);
+}
+
 .user-location-dot {
   position: absolute;
   width: 8px;

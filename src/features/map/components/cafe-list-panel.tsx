@@ -5,24 +5,7 @@ import { ChevronUp, ChevronDown, Star, Wifi, MapPin, Coffee } from "lucide-react
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import cafesData from "@/data/cafes.json"
-
-interface CafeProperties {
-  id: number
-  name: string
-  address: string
-  rating: number
-  wifiSpeed: string
-  image: string
-}
-
-interface CafeFeature {
-  type: string
-  properties: CafeProperties
-  geometry: {
-    type: string
-    coordinates: [number, number]
-  }
-}
+import { CafeFeature } from "../types"
 
 interface CafeListPanelProps {
   searchQuery: string
