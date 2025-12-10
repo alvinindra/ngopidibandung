@@ -2,11 +2,11 @@
 
 import { useState } from "react"
 import dynamic from "next/dynamic"
-import FloatingSearchBar from "@/components/floating-search-bar"
-import MapControls from "@/components/map-controls"
+import FloatingSearchBar from "@/features/search/components/floating-search-bar"
+import MapControls from "@/features/map/components/map-controls"
 
 // Dynamically import the map component to avoid SSR issues
-const CafeMap = dynamic(() => import("@/components/cafe-map"), {
+const CafeMap = dynamic(() => import("@/features/map/components/cafe-map"), {
   ssr: false,
   loading: () => (
     <div className="absolute inset-0 bg-muted flex items-center justify-center">

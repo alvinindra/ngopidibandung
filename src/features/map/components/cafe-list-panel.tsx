@@ -31,17 +31,18 @@ interface CafeListPanelProps {
 export default function CafeListPanel({ searchQuery }: CafeListPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
-  const filteredCafes = cafesData.features.filter(
-    (feature: CafeFeature) =>
+  const cafes = cafesData.features as CafeFeature[]
+
+  const filteredCafes = cafes.filter(
+    (feature) =>
       feature.properties.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       feature.properties.address.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
   return (
     <div
-      className={`absolute bottom-0 left-0 right-0 z-40 bg-card rounded-t-3xl shadow-2xl border-t border-border/50 transition-all duration-300 ${
-        isExpanded ? "h-[60vh]" : "h-auto"
-      }`}
+      className={`absolute bottom-0 left-0 right-0 z-40 bg-card rounded-t-3xl shadow-2xl border-t border-border/50 transition-all duration-300 ${isExpanded ? "h-[60vh]" : "h-auto"
+        }`}
     >
       {/* Handle */}
       <button onClick={() => setIsExpanded(!isExpanded)} className="w-full flex flex-col items-center pt-3 pb-2">

@@ -39,7 +39,7 @@ export default function FloatingSearchBar({ onSearch }: FloatingSearchBarProps) 
             placeholder="Search cafes in Bandung..."
             value={query}
             onChange={(e) => handleSearch(e.target.value)}
-            className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60 text-foreground"
+            className="border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60 text-foreground"
           />
           {query && (
             <button onClick={() => handleSearch("")} className="p-1 hover:bg-muted rounded-full transition-colors">
@@ -72,7 +72,7 @@ export default function FloatingSearchBar({ onSearch }: FloatingSearchBarProps) 
             </DropdownMenuContent>
           </DropdownMenu>
           <Button className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground px-4">
-            <Search className="h-4 w-4 mr-2" />
+            <Search className="h-4 w-4" />
             Search
           </Button>
         </div>

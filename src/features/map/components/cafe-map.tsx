@@ -78,7 +78,7 @@ export default function CafeMap() {
             className: "custom-div-icon",
             html: `
               <div class="custom-marker">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="#8B4513" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="white" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M17 8h1a4 4 0 1 1 0 8h-1"/>
                   <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/>
                   <line x1="6" x2="6" y1="2" y2="4"/>
@@ -93,17 +93,17 @@ export default function CafeMap() {
           })
         }
 
-        // Add markers for each cafe
-        cafesData.features.forEach((feature: CafeFeature) => {
-          const { coordinates } = feature.geometry
-          const props = feature.properties
+          // Add markers for each cafe
+          ; (cafesData.features as CafeFeature[]).forEach((feature) => {
+            const { coordinates } = feature.geometry
+            const props = feature.properties
 
-          const marker = L.marker([coordinates[1], coordinates[0]], {
-            icon: createCoffeeIcon(),
-          }).addTo(map)
+            const marker = L.marker([coordinates[1], coordinates[0]], {
+              icon: createCoffeeIcon(),
+            }).addTo(map)
 
-          // Create popup content
-          const popupContent = `
+            // Create popup content
+            const popupContent = `
             <div class="cafe-popup-content">
               <img src="${props.image}" alt="${props.name}" class="cafe-popup-image" />
               <div class="cafe-popup-body">
@@ -136,12 +136,12 @@ export default function CafeMap() {
             </div>
           `
 
-          marker.bindPopup(popupContent, {
-            maxWidth: 300,
-            minWidth: 280,
-            className: "cafe-popup",
+            marker.bindPopup(popupContent, {
+              maxWidth: 300,
+              minWidth: 280,
+              className: "cafe-popup",
+            })
           })
-        })
 
         console.log("[v0] Map initialized successfully")
         setIsLoaded(true)
