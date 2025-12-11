@@ -38,3 +38,8 @@ export interface CafeFeature {
     coordinates: [number, number] | []
   }
 }
+
+export interface UserLocation {
+  latitude: number
+  longitude: number
+}

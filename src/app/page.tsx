@@ -10,7 +10,7 @@ import CafeListPanel from "@/features/map/components/cafe-list-panel"
 import { FilterDrawer } from "@/features/search/components/filter-drawer"
 import cafesData from "@/data/cafes.json"
 import type { MapHandle } from "@/features/map/components/cafe-map"
-import { CafeFeature } from "@/features/map/types"
+import { CafeFeature, UserLocation } from "@/features/map/types"
 import {
   FilterState,
   countActiveFilters,
@@ -44,6 +44,7 @@ export default function Home() {
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [filters, setFilters] = useState<FilterState>(defaultFilters)
   const [isIntroOpen, setIsIntroOpen] = useState(false)
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const mapRef = useRef<MapHandle>(null)
 
   const t = {
@@ -117,6 +118,7 @@ export default function Home() {
         cafes={filteredCafes}
         onLoad={handleAppReady}
         onSelectCafe={handleSelectCafe}
+        onUserLocationChange={setUserLocation}
       />
 
       {/* Floating Search Bar */}
@@ -170,7 +172,12 @@ export default function Home() {
         language={language}
       />
 
-      <CafeDetailDrawer cafe={selectedCafe} onClose={handleCloseDrawer} language={language} />
+      <CafeDetailDrawer
+        cafe={selectedCafe}
+        onClose={handleCloseDrawer}
+        language={language}
+        userLocation={userLocation}
+      />
 
       {isIntroOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">

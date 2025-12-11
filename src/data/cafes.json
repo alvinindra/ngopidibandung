@@ -1668,11 +1668,11 @@
         "keyTakeaway": "Acceptable",
         "mapUrl": "https://www.google.com/maps/place/Accio+Coffee/@-6.8967085,107.6310139,17z/data=!3m1!4b1!4m6!3m5!1s0x2e68e7940bbe6293:0x7f210d1288afe36f!8m2!3d-6.8967085!4d107.6335888!16s%2Fg%2F11td20vjc6?entry=tts",
         "instagram": "https://www.instagram.com/_accio.coffee/",
-        "coordinatesText": "-6.8967085, 107.6310139"
+        "coordinatesText": "-6.896495472642523, 107.63358960423152"
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [107.6310139, -6.8967085]
+        "coordinates": [107.63358960423152, -6.896495472642523]
       }
     },
     {
@@ -4524,7 +4524,7 @@
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [107.6326845, -6.8949694]
+        "coordinates": [107.63525939997321, -6.894830933821941]
       }
     },
     {
@@ -5237,7 +5237,7 @@
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [107.6362643, -6.8935861]
+        "coordinates": [107.63885355984495, -6.8934675722664895]
       }
     },
     {

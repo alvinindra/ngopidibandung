@@ -1,8 +1,8 @@
 "use client"
 
-import { CafeFeature } from "../types"
+import { useEffect, useState } from "react"
+import { CafeFeature, UserLocation } from "../types"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   Drawer,
   DrawerClose,
@@ -35,12 +35,30 @@ interface CafeDetailDrawerProps {
   cafe: CafeFeature | null
   onClose: () => void
   language: "en" | "id"
+  userLocation?: UserLocation | null
 }
 
-export default function CafeDetailDrawer({ cafe, onClose, language }: CafeDetailDrawerProps) {
+export default function CafeDetailDrawer({ cafe, onClose, language, userLocation }: CafeDetailDrawerProps) {
   const isOpen = Boolean(cafe)
+  const [localLocation, setLocalLocation] = useState<UserLocation | null>(null)
   const hasCoordinates = (coords: unknown): coords is [number, number] =>
     Array.isArray(coords) && coords.length === 2 && coords.every((value) => Number.isFinite(value))
+  const haversineDistanceKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const toRad = (deg: number) => (deg * Math.PI) / 180
+    const R = 6371
+    const dLat = toRad(lat2 - lat1)
+    const dLng = toRad(lng2 - lng1)
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c
+  }
+  const formatDistance = (km: number) => {
+    if (!Number.isFinite(km)) return ""
+    if (km >= 1) return `${km.toFixed(1)} km`
+    return `${Math.round(km * 1000)} m`
+  }
   const copy = {
     en: {
       close: "Close",
@@ -64,6 +82,7 @@ export default function CafeDetailDrawer({ cafe, onClose, language }: CafeDetail
       takeaway: "Takeaway",
       comment: "Comment",
       fallbackComment: "Tap a marker to see cafe details.",
+      distanceBadge: "Distance from you",
     },
     id: {
       close: "Tutup",
@@ -87,6 +106,7 @@ export default function CafeDetailDrawer({ cafe, onClose, language }: CafeDetail
       takeaway: "Catatan",
       comment: "Komentar",
       fallbackComment: "Ketuk marker untuk lihat detail kafe.",
+      distanceBadge: "Jarak dari lokasi kamu",
     },
   }[language]
 
@@ -97,6 +117,31 @@ export default function CafeDetailDrawer({ cafe, onClose, language }: CafeDetail
       : hasCoordinates(coordinates)
         ? `${coordinates[1].toFixed(4)}, ${coordinates[0].toFixed(4)}`
         : ""
+  const activeLocation = userLocation ?? localLocation
+  const distanceFromUser =
+    cafe && activeLocation && hasCoordinates(coordinates)
+      ? formatDistance(haversineDistanceKm(activeLocation.latitude, activeLocation.longitude, coordinates[1], coordinates[0]))
+      : ""
+
+  useEffect(() => {
+    if (!isOpen) return
+    if (userLocation || localLocation) return
+    if (typeof window === "undefined" || window.isSecureContext === false) return
+    if (typeof navigator === "undefined" || !navigator.geolocation) return
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocalLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        })
+      },
+      () => {
+        // ignore failures; badge will just stay hidden
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 },
+    )
+  }, [isOpen, userLocation, localLocation])
 
   const isYes = (value?: string | boolean) => {
     if (typeof value === "boolean") return value
@@ -165,7 +210,6 @@ export default function CafeDetailDrawer({ cafe, onClose, language }: CafeDetail
           ),
         },
         { label: copy.instagram, value: cafe.properties.instagram, icon: Instagram, isLink: true },
-        { label: copy.distance, value: cafe.properties.distance, icon: Navigation },
         { label: copy.map, value: cafe.properties.mapUrl, icon: Navigation, isLink: true },
         { label: copy.takeaway, value: cafe.properties.keyTakeaway, icon: Coffee },
       ].filter((item) => item.value && `${item.value}`.trim() !== "")
@@ -198,16 +242,24 @@ export default function CafeDetailDrawer({ cafe, onClose, language }: CafeDetail
                     <span>{cafe.properties.rating}</span>
                   </Badge>
                 ) : null}
-                {cafe.properties.downloadSpeed || cafe.properties.wifiSpeed ? (
+                {cafe.properties.downloadSpeed ? (
                   <Badge variant="outline" className="flex items-center gap-1">
                     <ArrowDownToLine className="h-3.5 w-3.5" />
-                    <span>{cafe.properties.downloadSpeed || cafe.properties.wifiSpeed}</span>
+                    <span>{cafe.properties.downloadSpeed}</span>
                   </Badge>
                 ) : null}
                 {cafe.properties.uploadSpeed ? (
                   <Badge variant="outline" className="flex items-center gap-1">
                     <ArrowUpToLine className="h-3.5 w-3.5" />
                     <span>{cafe.properties.uploadSpeed}</span>
+                  </Badge>
+                ) : null}
+                {distanceFromUser || cafe.properties.distance ? (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Navigation className="h-3.5 w-3.5" />
+                    <span>
+                      {copy.distanceBadge}: {distanceFromUser || cafe.properties.distance}
+                    </span>
                   </Badge>
                 ) : null}
               </div>

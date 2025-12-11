@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Globe2, Locate, Moon, Navigation, SlidersHorizontal, SunMedium } from "lucide-react"
+import { Globe2, GlobeIcon, Locate, Moon, Navigation, SlidersHorizontal, SunMedium } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -82,7 +82,7 @@ export default function MapControls({
               onClick={onToggleLanguage}
               aria-label={labels.languageToggle}
             >
-              <Globe2 className="h-5 w-5 text-foreground" />
+              <GlobeIcon className="h-5 w-5 text-foreground" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="left">

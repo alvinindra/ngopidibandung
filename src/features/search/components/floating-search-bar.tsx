@@ -32,7 +32,7 @@ export default function FloatingSearchBar({
 
   return (
     <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl px-4">
-      <div className="bg-card rounded-2xl shadow-xl border border-border/50 p-2 flex items-center">
+      <div className="bg-card rounded-2xl shadow-xl border border-border/50 p-2 flex items-center gap-1">
         <div className="flex items-center gap-3 pl-3 flex-1">
           <Coffee className="h-5 w-5 text-primary" />
           <Input
@@ -40,7 +40,7 @@ export default function FloatingSearchBar({
             placeholder={labels.placeholder}
             value={query}
             onChange={(e) => handleSearch(e.target.value)}
-            className="border-0 shadow-none text-sm pl-0 lg:pl-3 lg:text-lg bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60 text-foreground"
+            className="border-0 shadow-none text-sm pl-3 lg:text-lg bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60 text-foreground"
           />
           {query && (
             <button onClick={() => handleSearch("")} className="p-1 hover:bg-muted rounded-full transition-colors">

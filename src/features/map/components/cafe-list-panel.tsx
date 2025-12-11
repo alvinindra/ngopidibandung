@@ -3,7 +3,6 @@
 import type React from "react"
 import { useState } from "react"
 import { MapPin, Coffee, Search, Undo2 } from "lucide-react"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Drawer,
   DrawerContent,
@@ -50,16 +49,16 @@ export default function CafeListPanel({
       <DrawerTrigger asChild>
         <button
           aria-label={open ? "Hide cafe results" : "Show cafe results"}
-          className="text-nowrap pointer-events-auto fixed bottom-6 left-1/2 z-40 inline-flex -translate-x-1/2 transform cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-primary p-4 text-white shadow-2xl transition hover:shadow-[0_20px_45px_-20px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+          className="text-nowrap pointer-events-auto fixed bottom-6 left-1/2 z-40 inline-flex -translate-x-1/2 transform cursor-pointer items-center justify-center rounded-full border border-border/60 bg-primary p-4 text-primary-foreground shadow-2xl transition hover:shadow-[0_20px_45px_-20px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:shadow-black/40 dark:focus-visible:ring-slate-600"
         >
           <Search className="mr-2 h-4 w-4" /> {headerLabel}
         </button>
       </DrawerTrigger>
 
-      <DrawerContent className="pointer-events-auto mx-auto w-full max-w-3xl rounded-t-3xl border border-slate-200 bg-white/95 shadow-2xl backdrop-blur-sm">
-        <DrawerHeader className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+      <DrawerContent className="pointer-events-auto mx-auto w-full max-w-3xl rounded-t-3xl border border-border/60 bg-card shadow-2xl backdrop-blur-sm">
+        <DrawerHeader className="flex items-center justify-between border-b border-border/60 px-4 py-3">
           <DrawerTitle asChild>
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <div className="flex items-center gap-2 text-sm font-semibold text-card-foreground">
               <Coffee className="h-4 w-4 text-primary" />
               <span>{headerLabel}</span>
             </div>
@@ -68,7 +67,7 @@ export default function CafeListPanel({
             <Button
               variant="ghost"
               size="sm"
-              className="gap-2 rounded-full text-slate-600 hover:text-white"
+              className="gap-2 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
               onClick={onResetFilters}
             >
               <Undo2 className="h-4 w-4" />
@@ -93,14 +92,14 @@ export default function CafeListPanel({
                   return (
                     <div
                       key={cafe.id}
-                      className="group flex h-full cursor-pointer flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                      className="group flex h-full cursor-pointer flex-col gap-3 rounded-2xl border border-border/60 bg-card p-3 shadow-sm transition hover:-translate-y-0.5 hover:bg-muted/70 hover:shadow-md dark:shadow-black/20"
                       onClick={() => onSelectCafe?.(feature)}
                     >
                       <div className="min-w-0 flex-1 space-y-2">
-                        <h3 className="truncate font-semibold text-slate-900" title={cafe.name}>
+                        <h3 className="truncate font-semibold text-card-foreground" title={cafe.name}>
                           {cafe.name}
                         </h3>
-                        <div className="flex items-start gap-1.5 text-sm text-slate-500">
+                        <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
                           <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                           <span className="block truncate" title={cafe.address}>
                             {cafe.address}
@@ -112,7 +111,7 @@ export default function CafeListPanel({
                 })}
               </div>
             ) : (
-              <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-white/70 text-sm text-slate-500">
+              <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border/60 bg-muted/40 text-sm text-muted-foreground">
                 <Search className="h-5 w-5" />
                 <p>{language === "id" ? "Tidak ada hasil yang cocok" : "No cafes match your filters"}</p>
               </div>

@@ -2,7 +2,7 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
 import cafesData from "@/data/cafes.json"
-import { CafeFeature } from "../types"
+import { CafeFeature, UserLocation } from "../types"
 
 export interface MapHandle {
   locateUser: () => Promise<void>
@@ -29,6 +29,7 @@ interface CafeMapProps {
   onSelectCafe?: (feature: CafeFeature) => void
   onLoad?: () => void
   cafes?: CafeFeature[]
+  onUserLocationChange?: (coords: UserLocation) => void
 }
 
 declare global {
@@ -38,7 +39,7 @@ declare global {
 }
 
 const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
-  { language, theme, onSelectCafe, onLoad, cafes },
+  { language, theme, onSelectCafe, onLoad, cafes, onUserLocationChange },
   ref,
 ) {
   const mapRef = useRef<HTMLDivElement>(null)
@@ -52,11 +53,16 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
   const userMarkerRef = useRef<any>(null)
   const userAccuracyRef = useRef<any>(null)
   const onSelectCafeRef = useRef<typeof onSelectCafe>(onSelectCafe)
+  const onUserLocationChangeRef = useRef<typeof onUserLocationChange>(onUserLocationChange)
   const cafesRef = useRef<CafeFeature[]>(cafes ?? ((cafesData.features as CafeFeature[]) ?? []))
 
   useEffect(() => {
     onSelectCafeRef.current = onSelectCafe
   }, [onSelectCafe])
+
+  useEffect(() => {
+    onUserLocationChangeRef.current = onUserLocationChange
+  }, [onUserLocationChange])
 
   useEffect(() => {
     if (!isLoaded) return
@@ -168,6 +174,7 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
           userMarkerRef.current.openPopup()
           const targetZoom = Math.max(map.getZoom() ?? 13, 16)
           map.flyTo([latitude, longitude], targetZoom, { animate: true, duration: 0.6 })
+          onUserLocationChangeRef.current?.({ latitude, longitude })
           resolve()
         },
         (error) => {
