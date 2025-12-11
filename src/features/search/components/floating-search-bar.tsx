@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type RefObject } from "react"
 import { Search, Coffee, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 interface FloatingSearchBarProps {
   onSearch: (query: string) => void
   onOpenResults?: () => void
+  containerRef?: RefObject<HTMLDivElement | null>
   labels: {
     placeholder: string
     filterTitle: string
@@ -21,6 +22,7 @@ interface FloatingSearchBarProps {
 export default function FloatingSearchBar({
   onSearch,
   onOpenResults,
+  containerRef,
   labels,
 }: FloatingSearchBarProps) {
   const [query, setQuery] = useState("")
@@ -31,7 +33,7 @@ export default function FloatingSearchBar({
   }
 
   return (
-    <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl px-4">
+    <div ref={containerRef} className="absolute top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl px-4">
       <div className="bg-card rounded-2xl shadow-xl border border-border/50 p-2 flex items-center gap-1">
         <div className="flex items-center gap-3 pl-3 flex-1">
           <Coffee className="h-5 w-5 text-primary" />
