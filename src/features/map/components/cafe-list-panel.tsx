@@ -20,6 +20,7 @@ interface CafeListPanelProps {
   onOpenChange?: (open: boolean) => void
   onSelectCafe?: (feature: CafeFeature) => void
   onResetFilters?: () => void
+  triggerRef?: React.RefObject<HTMLButtonElement | null>
 }
 
 export default function CafeListPanel({
@@ -29,6 +30,7 @@ export default function CafeListPanel({
   onOpenChange,
   onSelectCafe,
   onResetFilters,
+  triggerRef,
 }: CafeListPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const open = isOpen ?? isExpanded
@@ -48,6 +50,7 @@ export default function CafeListPanel({
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerTrigger asChild>
         <button
+          ref={triggerRef}
           aria-label={open ? "Hide cafe results" : "Show cafe results"}
           className="text-nowrap pointer-events-auto fixed bottom-6 left-1/2 z-40 inline-flex -translate-x-1/2 transform cursor-pointer items-center justify-center rounded-full border border-border/60 bg-primary p-4 text-primary-foreground shadow-2xl transition hover:shadow-[0_20px_45px_-20px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:shadow-black/40 dark:focus-visible:ring-slate-600"
         >

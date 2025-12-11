@@ -8,6 +8,7 @@ import MapControls from "@/features/map/components/map-controls"
 import CafeDetailDrawer from "@/features/map/components/cafe-detail-drawer"
 import CafeListPanel from "@/features/map/components/cafe-list-panel"
 import { FilterDrawer } from "@/features/search/components/filter-drawer"
+import { OnboardingPopover, type OnboardingPopoverStep } from "@/features/onboarding/components/onboarding-popover"
 import cafesData from "@/data/cafes.json"
 import type { MapHandle } from "@/features/map/components/cafe-map"
 import { CafeFeature, UserLocation } from "@/features/map/types"
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 
 const INTRO_STORAGE_KEY = "ngopidibandung_intro_seen"
+const TOUR_STORAGE_KEY = "ngopidibandung_tour_done"
 
 // Dynamically import the map component to avoid SSR issues
 const CafeMap = dynamic(() => import("@/features/map/components/cafe-map"), {
@@ -45,7 +47,38 @@ export default function Home() {
   const [filters, setFilters] = useState<FilterState>(defaultFilters)
   const [isIntroOpen, setIsIntroOpen] = useState(false)
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
+  const [tourStepIndex, setTourStepIndex] = useState<number | null>(null)
   const mapRef = useRef<MapHandle>(null)
+  const searchRef = useRef<HTMLDivElement | null>(null)
+  const controlsRef = useRef<HTMLDivElement | null>(null)
+  const listTriggerRef = useRef<HTMLButtonElement | null>(null)
+
+  const tourSteps: OnboardingPopoverStep[] = useMemo(
+    () => [
+      {
+        id: "search",
+        title: "Cari kafe favoritmu",
+        description: "Gunakan kolom pencarian di atas untuk menemukan kafe atau area yang ingin kamu jelajahi.",
+        targetRef: searchRef,
+        placement: "bottom",
+      },
+      {
+        id: "filters",
+        title: "Filter, bahasa, dan tema",
+        description: "Tombol di kanan atas untuk filter, ganti bahasa, serta mode terang/gelap.",
+        targetRef: controlsRef,
+        placement: "left",
+      },
+      {
+        id: "list",
+        title: "Lihat daftar hasil",
+        description: "Tombol mengambang di bawah membuka daftar kafe. Kamu bisa reset filter di sana.",
+        targetRef: listTriggerRef,
+        placement: "top",
+      },
+    ],
+    [],
+  )
 
   const t = {
     en: {
@@ -60,6 +93,7 @@ export default function Home() {
       languageToggle: "Switch to Bahasa",
       themeToggle: "Toggle light / dark",
       locateFailed: "Unable to fetch location. Allow permission or use HTTPS/localhost.",
+      help: "About this app & help",
     },
     id: {
       searchPlaceholder: "Cari tempat ngopi di Bandung",
@@ -73,6 +107,7 @@ export default function Home() {
       languageToggle: "Ganti ke English",
       themeToggle: "Ubah mode terang/gelap",
       locateFailed: "Lokasi tidak bisa diambil. Izinkan akses atau gunakan HTTPS/localhost.",
+      help: "Tentang aplikasi & bantuan",
     },
   }[language]
 
@@ -88,6 +123,44 @@ export default function Home() {
     setFilters((prev) => ({ ...prev, ...next }))
   const handleResetFilters = () => setFilters(defaultFilters)
 
+  const startTour = (force = false) => {
+    if (typeof window === "undefined") return
+    const hasCompletedTour = localStorage.getItem(TOUR_STORAGE_KEY)
+    if (!force && hasCompletedTour) return
+    if (force) {
+      localStorage.removeItem(TOUR_STORAGE_KEY)
+    }
+    setTourStepIndex(0)
+  }
+
+  const finishTour = () => {
+    setTourStepIndex(null)
+    if (typeof window !== "undefined") {
+      localStorage.setItem(TOUR_STORAGE_KEY, "1")
+    }
+  }
+
+  const handleNextTourStep = () => {
+    setTourStepIndex((prev) => {
+      if (prev === null) return prev
+      const next = prev + 1
+      if (next >= tourSteps.length) {
+        finishTour()
+        return null
+      }
+      return next
+    })
+  }
+
+  const handlePrevTourStep = () => {
+    setTourStepIndex((prev) => {
+      if (prev === null) return prev
+      return Math.max(prev - 1, 0)
+    })
+  }
+
+  const handleSkipTour = () => finishTour()
+
   const handleAppReady = () => {
     if (typeof window === "undefined") return
     const hasSeen = localStorage.getItem(INTRO_STORAGE_KEY)
@@ -98,6 +171,15 @@ export default function Home() {
   }
 
   const handleCloseIntro = () => setIsIntroOpen(false)
+  const handleBeginExploring = () => {
+    handleCloseIntro()
+    startTour()
+  }
+  const handleOpenIntro = () => setIsIntroOpen(true)
+  const handleShowTourAgain = () => {
+    setIsIntroOpen(false)
+    startTour(true)
+  }
 
   const allCafes = cafesData.features as CafeFeature[]
 
@@ -107,6 +189,8 @@ export default function Home() {
   }, [allCafes, filters, searchQuery])
 
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters])
+  const currentTourStep = tourStepIndex !== null ? tourSteps[tourStepIndex] : null
+  const isTourOpen = tourStepIndex !== null
 
   return (
     <main className="relative h-screen w-full overflow-hidden bg-background">
@@ -123,6 +207,7 @@ export default function Home() {
 
       {/* Floating Search Bar */}
       <FloatingSearchBar
+        containerRef={searchRef}
         onSearch={setSearchQuery}
         onOpenResults={() => setIsListOpen(true)}
         labels={{
@@ -137,11 +222,13 @@ export default function Home() {
 
       {/* Map Controls */}
       <MapControls
+        containerRef={controlsRef}
         onLocate={handleLocate}
         onReset={handleReset}
         onToggleTheme={handleThemeToggle}
         onToggleLanguage={handleLanguageToggle}
         onOpenFilters={() => setIsFilterOpen(true)}
+        onOpenHelp={handleOpenIntro}
         currentTheme={currentTheme === "dark" ? "dark" : "light"}
         activeFilterCount={activeFilterCount}
         labels={{
@@ -151,10 +238,12 @@ export default function Home() {
           themeToggle: t.themeToggle,
           locateFailed: t.locateFailed,
           filterTitle: t.filterTitle,
+          help: t.help,
         }}
       />
 
       <CafeListPanel
+        triggerRef={listTriggerRef}
         language={language}
         cafes={filteredCafes}
         isOpen={isListOpen}
@@ -227,17 +316,36 @@ export default function Home() {
               </a>
             </div>
 
-            <div className="mt-6 flex justify-end">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleCloseIntro}
-              >
-                Mulai jelajah
-              </Button>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-muted-foreground">
+                Butuh pengantar ulang? Putar tur singkat kapan saja.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={handleShowTourAgain}>
+                  Tampilkan tur
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleBeginExploring}
+                >
+                  Mulai jelajah
+                </Button>
+              </div>
             </div>
           </div>
         </div>
+      ) : null}
+
+      {isTourOpen && currentTourStep ? (
+        <OnboardingPopover
+          stepIndex={tourStepIndex}
+          totalSteps={tourSteps.length}
+          step={currentTourStep}
+          onNext={handleNextTourStep}
+          onPrev={handlePrevTourStep}
+          onSkip={handleSkipTour}
+        />
       ) : null}
     </main>
   )

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Globe2, GlobeIcon, Locate, Moon, Navigation, SlidersHorizontal, SunMedium } from "lucide-react"
+import { useState, type RefObject } from "react"
+import { CircleHelp, GlobeIcon, Locate, Moon, Navigation, SlidersHorizontal, SunMedium } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -12,8 +12,10 @@ interface MapControlsProps {
   onToggleTheme: () => void
   onToggleLanguage: () => void
   onOpenFilters: () => void
+  onOpenHelp: () => void
   currentTheme: "light" | "dark" | string
   activeFilterCount?: number
+  containerRef?: RefObject<HTMLDivElement | null>
   labels: {
     myLocation: string
     reset: string
@@ -21,6 +23,7 @@ interface MapControlsProps {
     themeToggle: string
     locateFailed: string
     filterTitle: string
+    help: string
   }
 }
 
@@ -30,8 +33,10 @@ export default function MapControls({
   onToggleTheme,
   onToggleLanguage,
   onOpenFilters,
+  onOpenHelp,
   currentTheme,
   activeFilterCount,
+  containerRef,
   labels,
 }: MapControlsProps) {
   const [isLocating, setIsLocating] = useState(false)
@@ -50,7 +55,24 @@ export default function MapControls({
 
   return (
     <TooltipProvider>
-      <div className="absolute right-4 top-24 z-40 flex flex-col gap-2">
+      <div ref={containerRef} className="absolute right-4 top-24 z-40 flex flex-col gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="secondary"
+              size="icon"
+              className="rounded-xl bg-card shadow-lg border border-border/50 hover:bg-muted"
+              onClick={onOpenHelp}
+              aria-label={labels.help}
+            >
+              <CircleHelp className="h-5 w-5 text-foreground" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p>{labels.help}</p>
+          </TooltipContent>
+        </Tooltip>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
