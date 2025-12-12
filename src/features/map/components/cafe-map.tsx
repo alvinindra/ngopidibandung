@@ -23,6 +23,25 @@ const hasCoordinates = (
   )
 }
 
+function shiftCoordinate(lat: number, lng: number): {
+  lat: number
+  lng: number
+} {
+  const latDigits = (lat.toString().split('.')[1] || '').length
+  const lngDigits = (lng.toString().split('.')[1] || '').length
+
+  const latShifting = -0.000054; // 6 meter to the south
+  const lngShifting = 0.00263;   // 292 meter to the east
+
+  if (latDigits < 8 || lngDigits < 8) {
+    return {
+      lat: lat + latShifting,
+      lng: lng + lngShifting,
+    }
+  }
+  return { lat, lng }
+}
+
 interface CafeMapProps {
   language: "en" | "id"
   theme: string | undefined
@@ -256,7 +275,11 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
     if (!shouldCluster) {
       cafeFeatures.forEach((feature) => {
         const { coordinates } = feature.geometry
-        const marker = L.marker([coordinates[1], coordinates[0]], {
+
+        // We need to shift the coordinate a bit to make coordinates more precise
+        const shifted = shiftCoordinate(coordinates[1], coordinates[0]);
+
+        const marker = L.marker([shifted.lat, shifted.lng], {
           icon: createCoffeeIcon(L),
         })
         marker.on("click", () => handleCafeClick(feature))
@@ -273,8 +296,12 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
 
     cafeFeatures.forEach((feature) => {
       const { coordinates } = feature.geometry
-      const lat = coordinates[1]
-      const lng = coordinates[0]
+
+      // We need to shift the coordinate a bit to make coordinates more precise
+      const shifted = shiftCoordinate(coordinates[1], coordinates[0]);
+      const lat = shifted.lat
+      const lng = shifted.lng
+      
       const key = `${Math.floor(lat / cellSize)}-${Math.floor(lng / cellSize)}`
       const existing = clusters.get(key)
       if (existing) {
