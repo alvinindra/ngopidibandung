@@ -325,6 +325,30 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
   )
 
   useEffect(() => {
+    // Helper: get lat/lng/zoom from URL
+    function getMapParamsFromUrl() {
+      if (typeof window === 'undefined') return null;
+      const params = new URLSearchParams(window.location.search);
+      const lat = parseFloat(params.get('lat') || '');
+      const lng = parseFloat(params.get('lng') || '');
+      const zoom = parseInt(params.get('zoom') || '');
+      if (!isNaN(lat) && !isNaN(lng) && !isNaN(zoom)) {
+        return { lat, lng, zoom };
+      }
+      return null;
+    }
+
+    // Helper: update URL with lat/lng/zoom
+    function setMapParamsToUrl(lat: number, lng: number, zoom: number) {
+      if (typeof window === 'undefined') return;
+      const params = new URLSearchParams(window.location.search);
+      params.set('lat', lat.toFixed(6));
+      params.set('lng', lng.toFixed(6));
+      params.set('zoom', zoom.toString());
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({}, '', newUrl);
+    }
+
     const initMap = () => {
       if (initAttempts.current > 50) {
         setIsLoaded(true)
@@ -341,12 +365,17 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
       }
 
       try {
-        // Initialize map centered on Bandung
+        // Ambil dari URL jika ada, jika tidak default Bandung
+        const params = getMapParamsFromUrl();
+        const initialLat = params?.lat ?? -6.9025;
+        const initialLng = params?.lng ?? 107.6191;
+        const initialZoom = params?.zoom ?? 15;
+
         const map = L.map(mapRef.current, {
           zoomControl: false,
-        }).setView([-6.9025, 107.6191], 15)
+        }).setView([initialLat, initialLng], initialZoom);
 
-        mapInstanceRef.current = map
+        mapInstanceRef.current = map;
 
         // Create tile layers for light and dark mode
         tileLayersRef.current = {
@@ -363,6 +392,15 @@ const CafeMap = forwardRef<MapHandle, CafeMapProps>(function CafeMap(
         cafeClusterLayerRef.current = L.layerGroup().addTo(map)
         renderCafeLayers()
         map.on("zoomend", renderCafeLayers)
+
+        // Update URL on move/zoom
+        const updateUrl = () => {
+          const center = map.getCenter();
+          const zoom = map.getZoom();
+          setMapParamsToUrl(center.lat, center.lng, zoom);
+        };
+        map.on("moveend", updateUrl);
+        map.on("zoomend", updateUrl);
 
         setIsLoaded(true)
       } catch (error) {
