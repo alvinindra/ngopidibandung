@@ -3,6 +3,7 @@
 import { CafeFeature } from "../map/types"
 
 export type FilterState = {
+  wfcAble: boolean
   fastWifi: boolean
   minDownload?: number
   minRating?: number
@@ -19,6 +20,7 @@ export type FilterState = {
 }
 
 export const defaultFilters: FilterState = {
+  wfcAble: false,
   fastWifi: false,
   minDownload: undefined,
   minRating: undefined,
@@ -84,6 +86,7 @@ export const matchesFilters = (
   if (filters.hasServiceTax && !(cafe.serviceTax && cafe.serviceTax !== "-"))
     return false
   if (filters.maxPrice && price && price > filters.maxPrice) return false
+  if (filters.wfcAble && !(cafe.keyTakeaway === "WFC-able" || cafe.keyTakeaway === "Acceptable")) return false
   if (filters.hasMenu && !cafe.menuLink) return false
   if (filters.hasInstagram && !cafe.instagram) return false
   if (filters.hasTakeaway && !cafe.keyTakeaway) return false
@@ -93,6 +96,7 @@ export const matchesFilters = (
 
 export const countActiveFilters = (filters: FilterState) =>
   [
+    filters.wfcAble,
     filters.fastWifi,
     filters.hasMusala,
     filters.parkingMotor,
