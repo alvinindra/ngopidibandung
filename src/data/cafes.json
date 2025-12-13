@@ -1867,7 +1867,7 @@
         "id": 61,
         "name": "LUI",
         "address": "Jl. Bahureksa No.24, Citarum, Kec. Bandung Wetan, Kota Bandung, Jawa Barat 40115",
-        "operationalHours": "Weekday: 11.00 - 23.00Weekend: 11.00 - 00.00",
+        "operationalHours": "Weekday: 11.00 - 23.00\nWeekend: 11.00 - 00.00",
         "priceRange": "Start From 30K",
         "menuLink": "https://drive.google.com/drive/folders/1pyNwEN3A_kQ71om_qiU4tji5mMbHPMdE",
         "cashAccepted": true,

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { CafeFeature, UserLocation } from "../types"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Drawer,
   DrawerClose,
@@ -11,24 +12,36 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
   Coffee,
   MapPin,
   Star,
   ArrowDownToLine,
   ArrowUpToLine,
   DoorOpen,
-  X,
   Waves,
   Wallet,
   Clock,
-  Link2,
   Percent,
   Navigation,
   ParkingCircle,
   Car,
   Bike,
-  CalendarRange,
   Instagram,
+  BookOpenText,
+  ExternalLink,
+  Menu,
+  Map,
+  Laptop,
+  Info,
+  Check,
 } from "lucide-react"
 
 interface CafeDetailDrawerProps {
@@ -83,6 +96,11 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
       comment: "Comment",
       fallbackComment: "Tap a marker to see cafe details.",
       distanceBadge: "Distance from you",
+      wfcHighlight: "Great for Working!",
+      wfcAcceptable: "Acceptable for Work",
+      wfcDescription: "This cafe is suitable for remote work with good connectivity and atmosphere.",
+      wfcAcceptableDescription: "This cafe is acceptable for working, though may have some limitations.",
+      wfcTooltip: "This information is based on reviews from Google Maps and TikTok users who have visited this cafe.",
     },
     id: {
       close: "Tutup",
@@ -107,6 +125,11 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
       comment: "Komentar",
       fallbackComment: "Ketuk marker untuk lihat detail kafe.",
       distanceBadge: "Jarak dari lokasi kamu",
+      wfcHighlight: "Cocok untuk WFC!",
+      wfcAcceptable: "Bisa untuk Kerja",
+      wfcDescription: "Kafe ini cocok untuk kerja remote dengan koneksi dan suasana yang baik.",
+      wfcAcceptableDescription: "Kafe ini bisa untuk bekerja, meski mungkin ada keterbatasan.",
+      wfcTooltip: "Informasi ini berdasarkan ulasan dari beberapa reviewer di Google Maps dan juga TikTok yang pernah berkunjung ke kafe ini.",
     },
   }[language]
 
@@ -152,6 +175,23 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
   const hasParkingMotor = isYes(cafe?.properties.parkingMotor)
   const hasParkingCar = isYes(cafe?.properties.parkingCar)
 
+  // Check WFC-able status
+  const keyTakeaway = cafe?.properties.keyTakeaway?.toLowerCase() || ""
+  const isWfcAble = keyTakeaway.includes("wfc-able") && !keyTakeaway.includes("non-wfc-able")
+  const isAcceptable = keyTakeaway === "acceptable"
+  const showWfcBanner = isWfcAble || isAcceptable
+
+  const getLinkLabel = (label: string, url: string) => {
+    if (label.toLowerCase().includes("menu")) return language === "id" ? "Lihat Menu" : "View Menu"
+    if (label.toLowerCase().includes("instagram")) {
+      // Extract username from Instagram URL
+      const match = url.match(/instagram\.com\/([^/?]+)/)
+      return match ? `@${match[1]}` : "Instagram"
+    }
+    if (label.toLowerCase().includes("map") || label.toLowerCase().includes("peta")) return language === "id" ? "Buka Maps" : "Open Maps"
+    return language === "id" ? "Buka Link" : "Open Link"
+  }
+
   const detailItems =
     cafe?.properties
       ? [
@@ -161,7 +201,29 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
         { label: copy.lattePrice, value: cafe.properties.lattePrice, icon: Coffee },
         { label: copy.icedCoffeePrice, value: cafe.properties.icedCoffeePrice, icon: Coffee },
         { label: copy.afternoonTea, value: cafe.properties.afternoonTeaSet, icon: Coffee },
-        { label: copy.menu, value: cafe.properties.menuLink, icon: Link2, isLink: true },
+        {
+          label: copy.menu,
+          value: cafe.properties.menuLink,
+          icon: Menu,
+          isLink: true,
+          renderValue: () => {
+            const url = cafe.properties.menuLink
+            if (!url) return null
+            return (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-2 text-xs font-medium"
+                asChild
+              >
+                <a href={url} target="_blank" rel="noreferrer">
+                  {getLinkLabel(copy.menu, url)}
+                  <ExternalLink className="h-3 w-3 opacity-50" />
+                </a>
+              </Button>
+            )
+          }
+        },
         { label: copy.service, value: cafe.properties.serviceTax, icon: Percent },
         { label: copy.connection, value: cafe.properties.connection, icon: Waves },
         { label: copy.musala, value: language === "id" ? (cafe.properties.musala === "Available" ? "Tersedia" : "Tidak tersedia") : (cafe.properties.musala === "Available" ? "Available" : "Not Available"), icon: DoorOpen },
@@ -170,7 +232,7 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
           value: hasParkingMotor || hasParkingCar || cafe.properties.parkingPaid,
           icon: ParkingCircle,
           renderValue: () => (
-            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-card-foreground">
+            <div className="flex flex-wrap items-center gap-2 text-xs lg:text-sm font-semibold text-card-foreground">
               {hasParkingMotor ? (
                 <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-1">
                   <Bike className="h-3.5 w-3.5" />
@@ -184,7 +246,7 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
                 </span>
               ) : null}
               {!hasParkingMotor && !hasParkingCar && cafe.properties.parkingPaid ? (
-                <span className="text-sm font-semibold text-card-foreground">{cafe.properties.parkingPaid}</span>
+                <span className="text-xs lg:text-sm font-semibold text-card-foreground">{cafe.properties.parkingPaid}</span>
               ) : null}
             </div>
           ),
@@ -197,7 +259,7 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
               : "",
           icon: Wallet,
           renderValue: () => (
-            <div className="flex flex-wrap items-center gap-3 text-sm font-semibold text-card-foreground">
+            <div className="flex flex-wrap items-center gap-3 text-xs lg:text-sm font-semibold text-card-foreground">
               <span className="inline-flex items-center gap-2">
                 <span className={`h-2.5 w-2.5 rounded-full ${cafe?.properties.cashAccepted ? "bg-green-500" : "bg-red-500"}`} />
                 <span>{language === "id" ? "Tunai" : "Cash"}</span>
@@ -209,8 +271,53 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
             </div>
           ),
         },
-        { label: copy.instagram, value: cafe.properties.instagram, icon: Instagram, isLink: true },
-        { label: copy.map, value: cafe.properties.mapUrl, icon: Navigation, isLink: true },
+        {
+          label: copy.instagram,
+          value: cafe.properties.instagram,
+          icon: Instagram,
+          isLink: true,
+          renderValue: () => {
+            const url = cafe.properties.instagram
+            if (!url) return null
+            return (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-2 text-xs font-medium bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20 hover:from-purple-500/20 hover:to-pink-500/20"
+                asChild
+              >
+                <a href={url} target="_blank" rel="noreferrer">
+                  {getLinkLabel(copy.instagram, url)}
+                  <ExternalLink className="h-3 w-3 opacity-50" />
+                </a>
+              </Button>
+            )
+          }
+        },
+        {
+          label: copy.map,
+          value: cafe.properties.mapUrl,
+          icon: Navigation,
+          isLink: true,
+          renderValue: () => {
+            const url = cafe.properties.mapUrl
+            if (!url) return null
+            return (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-2 text-xs font-medium bg-gradient-to-r from-blue-500/10 to-green-500/10 border-blue-500/20 hover:from-blue-500/20 hover:to-green-500/20"
+                asChild
+              >
+                <a href={url} target="_blank" rel="noreferrer">
+                  {/* <Map className="h-3.5 w-3.5 text-blue-500" /> */}
+                  {getLinkLabel(copy.map, url)}
+                  <ExternalLink className="h-3 w-3 opacity-50" />
+                </a>
+              </Button>
+            )
+          }
+        },
         { label: copy.takeaway, value: cafe.properties.keyTakeaway, icon: Coffee },
       ].filter((item) => item.value && `${item.value}`.trim() !== "")
       : []
@@ -228,7 +335,93 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
         </DrawerHeader>
 
         {cafe ? (
-          <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto px-5 pb-6 pt-2">
+          <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto px-4 lg:px-5 pb-6 pt-2">
+            {/* WFC-able Highlight Banner */}
+            {showWfcBanner && (
+              <div className={`rounded-xl p-3 ${isWfcAble
+                ? "bg-gradient-to-r from-emerald-500/15 via-green-500/10 to-teal-500/15 border border-emerald-500/30"
+                : "bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-orange-500/15 border border-amber-500/30"
+                }`}>
+                <div className="flex items-center gap-3">
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isWfcAble ? "bg-emerald-500/20" : "bg-amber-500/20"
+                    }`}>
+                    <Laptop className={`h-4 w-4 ${isWfcAble ? "text-emerald-600" : "text-amber-600"}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold ${isWfcAble ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"}`}>
+                      {isWfcAble ? copy.wfcHighlight : copy.wfcAcceptable}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {isWfcAble ? copy.wfcDescription : copy.wfcAcceptableDescription}
+                    </p>
+                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button className="cursor-pointer shrink-0 inline-flex items-center justify-center mt-0.5 hover:opacity-80 transition-opacity">
+                        <Info className={`h-5 w-5  ${isWfcAble ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`} />
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <Info className="h-5 w-5 text-primary" />
+                          {language === "id" ? "Informasi WFC" : "WFC Information"}
+                        </DialogTitle>
+                        <DialogDescription className="text-sm lg:text-base text-start leading-relaxed pt-2 space-y-3">
+                          <div>{copy.wfcTooltip}</div>
+
+                          {isAcceptable && (
+                            <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3 mt-3">
+                              <div className="font-semibold text-amber-700 dark:text-amber-400 mb-2 text-sm">
+                                {language === "id" ? "⚠️ Keterbatasan:" : "⚠️ Limitations:"}
+                              </div>
+                              <ul className="text-xs lg:text-sm space-y-1.5 text-muted-foreground">
+                                <li className="flex items-start gap-2">
+                                  <span className="text-amber-600 dark:text-amber-400 mt-0.5">•</span>
+                                  <span>{language === "id" ? "Koneksi WiFi mungkin lambat atau tidak stabil" : "WiFi connection might be slow or unstable"}</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="text-amber-600 dark:text-amber-400 mt-0.5">•</span>
+                                  <span>{language === "id" ? "Colokan listrik terbatas atau tidak tersedia" : "Limited or no power outlets available"}</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="text-amber-600 dark:text-amber-400 mt-0.5">•</span>
+                                  <span>{language === "id" ? "Suasana mungkin ramai atau kurang kondusif" : "Atmosphere might be crowded or less conducive"}</span>
+                                </li>
+                              </ul>
+                            </div>
+                          )}
+
+                          {isWfcAble && (
+                            <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3 mt-3">
+                              <div className="flex font-semibold text-emerald-700 dark:text-emerald-400 mb-2 text-sm">
+                                <Check className="h-4 w-4 mr-2 my-auto" /> {language === "id" ? "Fasilitas:" : "Facilities:"}
+                              </div>
+                              <ul className="text-xs lg:text-sm space-y-1.5 text-muted-foreground">
+                                <li className="flex items-start gap-2">
+                                  <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">•</span>
+                                  <span>{language === "id" ? "Koneksi WiFi cepat dan stabil" : "Fast and stable WiFi connection"}</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">•</span>
+                                  <span>{language === "id" ? "Colokan listrik tersedia" : "Power outlets available"}</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                  <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">•</span>
+                                  <span>{language === "id" ? "Suasana nyaman untuk bekerja" : "Comfortable working atmosphere"}</span>
+                                </li>
+                              </ul>
+                            </div>
+                          )}
+                        </DialogDescription>
+                      </DialogHeader>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            )}
+
+            {/* Cafe Header */}
             <div className="space-y-2">
               <h3 className="text-xl font-semibold text-card-foreground">{cafe.properties.name}</h3>
               <div className="flex flex-nowrap items-center gap-2 text-sm text-muted-foreground">
@@ -282,11 +475,17 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
                           {item.value}
                         </a>
                       ) : (
-                        <span className="text-sm font-semibold text-card-foreground">{item.value}</span>
+                        <span className="text-xs lg:text-sm font-semibold text-card-foreground">{item.value}</span>
                       ))
 
+                    // Check if this is Instagram item
+                    const isInstagram = item.label === copy.instagram
+
                     return (
-                      <div key={item.label} className="relative flex items-start gap-3 px-3 py-2">
+                      <div
+                        key={item.label}
+                        className={`relative flex items-start gap-2 lg:gap-3 px-3 py-2 ${isInstagram ? 'max-[376px]:col-span-2' : ''}`}
+                      >
                         <div className="mt-0.5 text-muted-foreground">
                           {Icon ? <Icon className="h-4 w-4" /> : null}
                         </div>
@@ -294,7 +493,7 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
                           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                             {item.label}
                           </p>
-                          <div className="wrap-break-word whitespace-pre-line text-sm leading-snug text-card-foreground">
+                          <div className="wrap-break-word whitespace-pre-line text-xs lg:text-sm leading-snug text-card-foreground">
                             {value}
                           </div>
                         </div>

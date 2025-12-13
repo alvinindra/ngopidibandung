@@ -1,7 +1,7 @@
 "use client"
 
 import { type ComponentType, type ReactNode } from "react"
-import { Wifi, Star, DoorOpen, ParkingCircle, Car, Bike, Wallet, Receipt, Link2, Instagram, StickyNote } from "lucide-react"
+import { Wifi, Star, DoorOpen, ParkingCircle, Car, Bike, Wallet, Receipt, Link2, Instagram, StickyNote, Laptop } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { FilterState } from "../filter-utils"
@@ -119,14 +119,18 @@ export function FilterDrawer({ open, onOpenChange, filters, onChange, onReset, l
         <DrawerHeader className="flex items-center justify-between px-5 pt-4 pb-2">
           <div>
             <DrawerTitle className="text-base font-semibold text-card-foreground">{copy.title}</DrawerTitle>
-            <p className="text-sm text-muted-foreground">{language === "id" ? "Saring tempat ngopi sesuai kebutuhanmu" : "Narrow cafes to what you need"}</p>
+            <p className="text-sm text-muted-foreground">{language === "id" ? "Cari tempat ngopi sesuai kebutuhanmu" : "Narrow cafes to what you need"}</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={onReset}>
+          <Button variant="default" size="sm" onClick={onReset}>
             {copy.reset}
           </Button>
         </DrawerHeader>
 
         <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto px-5 pb-5">
+          <Section title={language === "id" ? "Kerja" : "Work"}>
+            <FilterChip active={filters.wfcAble} icon={Laptop} label={language === "id" ? "WFC-able" : "WFC-able"} onClick={() => toggle("wfcAble")} />
+          </Section>
+
           <Section title={copy.quick}>
             <FilterChip active={filters.fastWifi} icon={Wifi} label={copy.fastWifi} onClick={() => toggle("fastWifi")} />
             <FilterChip active={filters.minDownload === 80} icon={Wifi} label={copy.ultraWifi} onClick={() => toggleNumber("minDownload", 80)} />
