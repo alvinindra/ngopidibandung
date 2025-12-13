@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { CafeFeature, UserLocation } from "../types"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Drawer,
   DrawerClose,
@@ -17,18 +18,19 @@ import {
   ArrowDownToLine,
   ArrowUpToLine,
   DoorOpen,
-  X,
   Waves,
   Wallet,
   Clock,
-  Link2,
   Percent,
   Navigation,
   ParkingCircle,
   Car,
   Bike,
-  CalendarRange,
   Instagram,
+  BookOpenText,
+  ExternalLink,
+  Menu,
+  Map,
 } from "lucide-react"
 
 interface CafeDetailDrawerProps {
@@ -152,6 +154,24 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
   const hasParkingMotor = isYes(cafe?.properties.parkingMotor)
   const hasParkingCar = isYes(cafe?.properties.parkingCar)
 
+  const getLinkLabel = (label: string, url: string) => {
+    if (label.toLowerCase().includes("menu")) return language === "id" ? "Lihat Menu" : "View Menu"
+    if (label.toLowerCase().includes("instagram")) {
+      // Extract username from Instagram URL
+      const match = url.match(/instagram\.com\/([^/?]+)/)
+      return match ? `@${match[1]}` : "Instagram"
+    }
+    if (label.toLowerCase().includes("map") || label.toLowerCase().includes("peta")) return language === "id" ? "Buka Google Maps" : "Open Google Maps"
+    return language === "id" ? "Buka Link" : "Open Link"
+  }
+
+  const getLinkIcon = (label: string) => {
+    if (label.toLowerCase().includes("menu")) return BookOpenText
+    if (label.toLowerCase().includes("instagram")) return Instagram
+    if (label.toLowerCase().includes("map") || label.toLowerCase().includes("peta")) return Map
+    return ExternalLink
+  }
+
   const detailItems =
     cafe?.properties
       ? [
@@ -161,7 +181,29 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
         { label: copy.lattePrice, value: cafe.properties.lattePrice, icon: Coffee },
         { label: copy.icedCoffeePrice, value: cafe.properties.icedCoffeePrice, icon: Coffee },
         { label: copy.afternoonTea, value: cafe.properties.afternoonTeaSet, icon: Coffee },
-        { label: copy.menu, value: cafe.properties.menuLink, icon: Link2, isLink: true },
+        {
+          label: copy.menu,
+          value: cafe.properties.menuLink,
+          icon: Menu,
+          isLink: true,
+          renderValue: () => {
+            const url = cafe.properties.menuLink
+            if (!url) return null
+            return (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-2 text-xs font-medium"
+                asChild
+              >
+                <a href={url} target="_blank" rel="noreferrer">
+                  {getLinkLabel(copy.menu, url)}
+                  <ExternalLink className="h-3 w-3 opacity-50" />
+                </a>
+              </Button>
+            )
+          }
+        },
         { label: copy.service, value: cafe.properties.serviceTax, icon: Percent },
         { label: copy.connection, value: cafe.properties.connection, icon: Waves },
         { label: copy.musala, value: language === "id" ? (cafe.properties.musala === "Available" ? "Tersedia" : "Tidak tersedia") : (cafe.properties.musala === "Available" ? "Available" : "Not Available"), icon: DoorOpen },
@@ -209,8 +251,54 @@ export default function CafeDetailDrawer({ cafe, onClose, language, userLocation
             </div>
           ),
         },
-        { label: copy.instagram, value: cafe.properties.instagram, icon: Instagram, isLink: true },
-        { label: copy.map, value: cafe.properties.mapUrl, icon: Navigation, isLink: true },
+        {
+          label: copy.instagram,
+          value: cafe.properties.instagram,
+          icon: Instagram,
+          isLink: true,
+          renderValue: () => {
+            const url = cafe.properties.instagram
+            if (!url) return null
+            return (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-2 text-xs font-medium bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20 hover:from-purple-500/20 hover:to-pink-500/20"
+                asChild
+              >
+                <a href={url} target="_blank" rel="noreferrer">
+                  {/* <Instagram className="h-3.5 w-3.5 text-pink-500" /> */}
+                  {getLinkLabel(copy.instagram, url)}
+                  <ExternalLink className="h-3 w-3 opacity-50" />
+                </a>
+              </Button>
+            )
+          }
+        },
+        {
+          label: copy.map,
+          value: cafe.properties.mapUrl,
+          icon: Navigation,
+          isLink: true,
+          renderValue: () => {
+            const url = cafe.properties.mapUrl
+            if (!url) return null
+            return (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-2 text-xs font-medium bg-gradient-to-r from-blue-500/10 to-green-500/10 border-blue-500/20 hover:from-blue-500/20 hover:to-green-500/20"
+                asChild
+              >
+                <a href={url} target="_blank" rel="noreferrer">
+                  {/* <Map className="h-3.5 w-3.5 text-blue-500" /> */}
+                  {getLinkLabel(copy.map, url)}
+                  <ExternalLink className="h-3 w-3 opacity-50" />
+                </a>
+              </Button>
+            )
+          }
+        },
         { label: copy.takeaway, value: cafe.properties.keyTakeaway, icon: Coffee },
       ].filter((item) => item.value && `${item.value}`.trim() !== "")
       : []
